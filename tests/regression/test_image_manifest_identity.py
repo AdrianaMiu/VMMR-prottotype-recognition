@@ -4,6 +4,10 @@ A fresh build is written to a temporary directory and compared with the publishe
 ``data/manifests/compcars_web_images.sha256`` and summary; this runs only where the
 CompCars release is present (dataset root from configs/datasets, COMPCARS_ROOT overrides).
 The summary checks run everywhere.
+
+Parquet bytes depend on the writer, so the published hash is tied to the pyarrow pinned in
+uv.lock; a pyarrow upgrade means rebuilding with scripts/build_image_manifest.py and
+recording the new hash.
 """
 
 import hashlib
