@@ -5,6 +5,7 @@ defaults:
   - encoders@encoder: dinov3_vitb16
   - preprocessing@preprocessing: p1_bbox_crop
   - experiments@experiment: e0_pipeline_validation
+  - tracking@tracking: local
   - _self_
 
 seed: 73
