@@ -1,0 +1,3 @@
+name: compcars_web
+# Local root of the CompCars web-nature release; never committed, never redistributed.
+root: ${oc.env:COMPCARS_ROOT,../compcar}

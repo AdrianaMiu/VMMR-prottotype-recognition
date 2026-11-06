@@ -1,0 +1,10 @@
+# Root composition. Each group directory follows PROTOCOL.md §18; the `@key` binds the
+# selected file to a singular top-level key (cfg.dataset, cfg.encoder, ...).
+defaults:
+  - datasets@dataset: compcars_web
+  - encoders@encoder: dinov3_vitb16
+  - preprocessing@preprocessing: p1_bbox_crop
+  - experiments@experiment: e0_pipeline_validation
+  - _self_
+
+seed: 73

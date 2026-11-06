@@ -1,0 +1,2 @@
+name: p1_bbox_crop
+bbox_expand_fraction: 0.05

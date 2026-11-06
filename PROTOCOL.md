@@ -1227,4 +1227,3 @@ The first task after approving this context:
 - Radford et al. *Learning Transferable Visual Models From Natural Language Supervision*. https://arxiv.org/abs/2103.00020
 - OpenAI CLIP official repository. https://github.com/openai/CLIP
 - OpenCLIP official repository. https://github.com/mlfoundations/open_clip
-
