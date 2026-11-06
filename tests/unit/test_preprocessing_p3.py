@@ -24,6 +24,7 @@ from avr.preprocessing.p3 import (
 from avr.segmentation.base import Instance
 
 GT = (10, 10, 50, 50)
+MASK_SPAN = slice(20, 40)
 
 
 def _image() -> Image.Image:
@@ -31,7 +32,7 @@ def _image() -> Image.Image:
     return Image.fromarray(rng.integers(0, 255, size=(100, 100, 3), dtype=np.uint8), "RGB")
 
 
-def _instance(box, score, rows=slice(20, 40), cols=slice(20, 40), label="car") -> Instance:
+def _instance(box, score, rows=MASK_SPAN, cols=MASK_SPAN, label="car") -> Instance:
     mask = np.zeros((100, 100), dtype=bool)
     mask[rows, cols] = True
     return Instance(bbox_xyxy=tuple(float(v) for v in box), mask=mask, score=score, label=label)
