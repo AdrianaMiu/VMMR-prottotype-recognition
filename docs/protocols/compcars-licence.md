@@ -76,7 +76,7 @@ Where the rules live:
 | `data/paths/` and `data/external/` are never committed | `.gitignore`; `tests/unit/test_gitignore_policy.py` creates dummy files there and asserts `git check-ignore` rejects them |
 | `data/manifests/*.json` and `data/manifests/**/*.parquet` are committable | same test, negative case |
 | No path strings leak through split-identity records | `tests/unit/test_split_identity.py` asserts no file name appears in the serialised record |
-| Public manifest schema has no `relative_path` column | to be enforced by the manifest schema tests when the image manifest is built (M1) |
+| Public manifest schema has no `relative_path` column | `tests/integration/test_build_image_manifest.py` asserts the public Parquet columns equal `PUBLIC_COLUMNS` and that the path table is written separately under `data/paths/` |
 
 ## 3. Checklist before anything leaves the machine
 
