@@ -6,6 +6,7 @@ defaults:
   - preprocessing@preprocessing: p1_bbox_crop
   - experiments@experiment: e0_pipeline_validation
   - tracking@tracking: local
+  - dedup@dedup: default
   - _self_
 
 seed: 73
