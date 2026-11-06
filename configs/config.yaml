@@ -1,0 +1,9 @@
+# Root composition. Each group selects one file from its directory.
+defaults:
+  - dataset: compcars_web
+  - encoder: dinov3_vitb16
+  - preprocessing: p1_bbox_crop
+  - experiment: e0_pipeline_validation
+  - _self_
+
+seed: 73
