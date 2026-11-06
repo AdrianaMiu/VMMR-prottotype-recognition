@@ -1,0 +1,184 @@
+{
+  "dataset": "compcars_web",
+  "setting": "cvpr2015_half_half",
+  "label": "official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded",
+  "recorded_at": "2026-11-06",
+  "files": {
+    "train_test_split/classification/train.txt": {
+      "sha256": "9966d3e91b7dc735e224e04f5c53f33fbbe48d7c98e15509ca08e897d120ae9b",
+      "line_count": 16016,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2010/439374a1456969.jpg",
+      "last_line": "37/1993/2014/200a4671b58588.jpg"
+    },
+    "train_test_split/classification/test.txt": {
+      "sha256": "474c4eac44f79ec378b7f755c79b25b14bcc1251450a2766bf03cdfcb7bb2dd0",
+      "line_count": 14939,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/3ac218c0c6c378.jpg",
+      "last_line": "37/1993/2014/fcfbe76e8f9650.jpg"
+    },
+    "train_test_split/part/train_part_1.txt": {
+      "sha256": "d7133d783c2a80c87c8126e9b6c84008aba6f728f588e469e8dfdae9921fdb73",
+      "line_count": 1470,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2012/1/4d866be9780740.jpg",
+      "last_line": "37/1993/2010/1/96b0bffc5a5133.jpg"
+    },
+    "train_test_split/part/train_part_2.txt": {
+      "sha256": "05c08dac8403ff31886fa1328b62ab2e6cb32e3f018f122527fa7fe38eeaae2c",
+      "line_count": 1419,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/2/4bcb0535934a9a.jpg",
+      "last_line": "37/1993/2014/2/1e3bcddf11977b.jpg"
+    },
+    "train_test_split/part/train_part_3.txt": {
+      "sha256": "ed9a30d5c9f6326bc0f6d2db5e65f0a971ee84892a09df53c46e53fc26e13acc",
+      "line_count": 1308,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2013/3/0ef2cc28213b81.jpg",
+      "last_line": "37/1993/2014/3/ef838276b59011.jpg"
+    },
+    "train_test_split/part/train_part_4.txt": {
+      "sha256": "93322481d98d8936956404d371fb7b2324cd4cab0d5a30139b682427cc09f90e",
+      "line_count": 1374,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/4/eb7ea6d4799ffe.jpg",
+      "last_line": "37/1993/2010/4/a5759ae52c4512.jpg"
+    },
+    "train_test_split/part/train_part_5.txt": {
+      "sha256": "b3824f7786c6e2c969b18c5141760cd641816bec11aa0c7a9c0fb04b1bc588f7",
+      "line_count": 1359,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2013/5/46ccad8ce908e6.jpg",
+      "last_line": "37/1993/2010/5/547b9a256c7a87.jpg"
+    },
+    "train_test_split/part/train_part_6.txt": {
+      "sha256": "a4b7bdc58e25cb3a1ab9fe8c795125a0fea8dc8b491bec3451b9603e4ff9b5b8",
+      "line_count": 1382,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2012/6/396f1fffb2462c.jpg",
+      "last_line": "37/1993/2010/6/00e33d576e44a9.jpg"
+    },
+    "train_test_split/part/train_part_7.txt": {
+      "sha256": "808ec4d963881e5400450377d9fec71e2e6d507139a812127ea7348083068414",
+      "line_count": 1373,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/7/7681a94dae1569.jpg",
+      "last_line": "37/1993/2010/7/7dcadca41e546c.jpg"
+    },
+    "train_test_split/part/train_part_8.txt": {
+      "sha256": "c17ebfe82564a2b8dd0b41ec140c0a90575787fb4d902f294b6935875ffbf833",
+      "line_count": 1374,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/8/0b4041d7e598c7.jpg",
+      "last_line": "37/1993/2010/8/618847eb4d1a7d.jpg"
+    },
+    "train_test_split/part/test_part_1.txt": {
+      "sha256": "f745695fd7c56b7eabf4470cbcb2b08d0733739c4bdf1080f13ff1edf1941b58",
+      "line_count": 1246,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/1/fa6d0ee4f0bcde.jpg",
+      "last_line": "37/1993/2010/1/a2395ed58fc96d.jpg"
+    },
+    "train_test_split/part/test_part_2.txt": {
+      "sha256": "69fdb35de1e0f0989a60c7f3018a1c9e26623b3ace0b5fdd5fcf4f49470be9db",
+      "line_count": 1191,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2014/2/6d61f074305d28.jpg",
+      "last_line": "37/1993/2010/2/888cef71003798.jpg"
+    },
+    "train_test_split/part/test_part_3.txt": {
+      "sha256": "48fbf136b2f14b74d5a8c7d590fb6f609e640af6fd049f41a2722ae91cf1cd55",
+      "line_count": 1100,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2013/3/7077d15a0da34f.jpg",
+      "last_line": "37/1993/2010/3/9ca8b750972525.jpg"
+    },
+    "train_test_split/part/test_part_4.txt": {
+      "sha256": "31f7d28bc85cb8fe9a1b3dc1b002ae6f1d6f60bb885d01c0267618a201f737e7",
+      "line_count": 1146,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2010/4/cbab920732eaad.jpg",
+      "last_line": "37/1993/2010/4/eef9ba2342db66.jpg"
+    },
+    "train_test_split/part/test_part_5.txt": {
+      "sha256": "24cd6fd33ac06ef956a1b500798eceac645d4a6c98c6b88207146a4e2cc7eabb",
+      "line_count": 1130,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2013/5/4f60163df5ad11.jpg",
+      "last_line": "37/1993/2014/5/31963476549ff1.jpg"
+    },
+    "train_test_split/part/test_part_6.txt": {
+      "sha256": "7d563c90c1c39aecc397a5bd8b99bb802e7bc288e54a0809710e8501b268f990",
+      "line_count": 1166,
+      "make_count": 74,
+      "model_count": 430,
+      "first_line": "78/1/2014/6/3bd9bdd26dd701.jpg",
+      "last_line": "37/1993/2014/6/7d1610022531bd.jpg"
+    },
+    "train_test_split/part/test_part_7.txt": {
+      "sha256": "dc8ea3a2f190c1b14fe3c5212be48a5b4d5176d242e10430bc89ef03d7a84f8c",
+      "line_count": 1152,
+      "make_count": 74,
+      "model_count": 430,
+      "first_line": "78/1/2014/7/87c14d5455430f.jpg",
+      "last_line": "37/1993/2014/7/2bd369732b0d49.jpg"
+    },
+    "train_test_split/part/test_part_8.txt": {
+      "sha256": "c8ced4ca306e967b8706ae11eeef279678450231c406b43fe9127b0f1f9e216e",
+      "line_count": 1159,
+      "make_count": 75,
+      "model_count": 431,
+      "first_line": "78/1/2010/8/c083a32401955b.jpg",
+      "last_line": "37/1993/2010/8/0465df54919666.jpg"
+    },
+    "train_test_split/verification/verification_train.txt": {
+      "sha256": "0641189066a6a086aee1ea171f371ab8cd2aefa3e2b05a21e8be561e7ffe3e63",
+      "line_count": 4454,
+      "make_count": 54,
+      "model_count": 111,
+      "first_line": "78/12/2012/722894351630dc.jpg",
+      "last_line": "84/1970/2014/dfaf13cdc7fc93.jpg"
+    },
+    "train_test_split/verification/verification_pairs_easy.txt": {
+      "sha256": "7bb1dafd3d7c131027e2e3ac62bd7e1a3e8010d1c6b28b26fcc2df41eb7ca997",
+      "line_count": 20000,
+      "make_count": 156,
+      "model_count": 1137,
+      "first_line": "67/1698/2010/6805eb92ac6c70.jpg 67/1698/2011/49d3b39a88dce5.jpg 1",
+      "last_line": "78/16/2012/47fffa640a2f4b.jpg 58/336/2013/30cfabaaa858e9.jpg 0"
+    },
+    "train_test_split/verification/verification_pairs_medium.txt": {
+      "sha256": "96489265d965aa34f1d2ae75b98eeba8649ec8d55910f07b668e52b0c1748b28",
+      "line_count": 20000,
+      "make_count": 156,
+      "model_count": 1144,
+      "first_line": "39/1370/2013/1a0b24bdb08083.jpg 39/1370/2013/bc94c1ba2d2f82.jpg 1",
+      "last_line": "145/529/2014/4d27a877b1f3a0.jpg 163/719/2014/eb1f177648f4e4.jpg 0"
+    },
+    "train_test_split/verification/verification_pairs_hard.txt": {
+      "sha256": "9a153f3c415d0c1ab0979d7287a7afa9799119e259962cb866b2bcf8f9ff2f49",
+      "line_count": 20000,
+      "make_count": 156,
+      "model_count": 1140,
+      "first_line": "39/1370/2013/1a0b24bdb08083.jpg 39/1370/2013/bc94c1ba2d2f82.jpg 1",
+      "last_line": "100/236/2009/80a64db2c673c6.jpg 100/239/2004/fcef6c408aa8bd.jpg 0"
+    }
+  }
+}
