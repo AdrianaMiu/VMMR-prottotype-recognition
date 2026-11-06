@@ -28,4 +28,6 @@ outputs/
 # editor and tool state: every top-level dot-folder except the CI workflows
 /.*/
 !/.github/
+!/.dvc/
 /SKILL.md
+/skills-lock.json

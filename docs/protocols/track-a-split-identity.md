@@ -3,8 +3,9 @@
 **Label to use in every Track A table:** official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.
 
 Recorded 2026-11-06 from the local CompCars web-nature release under `train_test_split/`.
-Machine-readable copy: `data/manifests/track_a_split_identity.json`, re-verified by
-`tests/regression/test_track_a_split_identity.py` wherever the release is present.
+The machine-readable record is `data/manifests/track_a_split_identity.json` (full hashes for all
+22 distributed split files). `tests/regression/test_track_a_split_identity.py` re-derives it from
+the files wherever the release is present and fails if any of them changed.
 
 ## Which official setting this is
 
@@ -18,7 +19,8 @@ CompCars was published with two official classification settings for the same 43
 
 The distributed files sum to **30,955** lines, so they are the **CVPR 2015 half/half**
 setting. No release notes or version string ship with the dataset, hence "release version
-unverified". Consequences for PROTOCOL.md §21:
+unverified" (PROTOCOL.md §5 asks for the release version to be recorded). Consequences for the
+§21 literature matrix, to be applied when it is built (M6):
 
 - Direct comparison is allowed only with papers that report on this 30,955-image split.
 - Papers on the 70/30 setting (e.g. EP-CNN, IEEE TCSVT 2022) get `directly_comparable = no`,
@@ -27,48 +29,45 @@ unverified". Consequences for PROTOCOL.md §21:
   directly comparable; their leakage finding is why the duplicate audit (#8, #12) is reported
   alongside every Track A number.
 
-## Classification split
+## Classification split (the official split)
 
 | | train.txt | test.txt |
 |---|---|---|
 | lines | 16,016 | 14,939 |
 | makes referenced | 75 | 75 |
 | models referenced | 431 | 431 |
-| first line | `78/1/2010/439374a1456969.jpg` | `78/1/2014/3ac218c0c6c378.jpg` |
-| last line | `37/1993/2014/200a4671b58588.jpg` | `37/1993/2014/fcfbe76e8f9650.jpg` |
-| SHA-256 | `9966d3e91b7dc735e224e04f5c53f33fbbe48d7c98e15509ca08e897d120ae9b` | `474c4eac44f79ec378b7f755c79b25b14bcc1251450a2766bf03cdfcb7bb2dd0` |
+| SHA-256 of file | `9966d3e91b7dc735e224e04f5c53f33fbbe48d7c98e15509ca08e897d120ae9b` | `474c4eac44f79ec378b7f755c79b25b14bcc1251450a2766bf03cdfcb7bb2dd0` |
+| SHA-256 of first 3 lines | `e64b4e1d35f84555ee5fba88969e54cc7ab2f5633f27153932238a66de9a64f1` | `a1b61434c4f39f183169b077d0b36fe0a0305547cab93ba028b1ef99630928c9` |
+| SHA-256 of last 3 lines | `82b978cb8db9893837fe00f2bbf7ef581caeb32c362e0c71e4683ecf5ecf3890` | `1dc64aea66fc29e4a40713aafb32a37461b625566ba7a8dc9759f2b8dc71bfee` |
 
-No path appears in both files. Both sides reference all 431 models and 75 of the 163 makes;
-the Part-I 431-model subset covers 75 makes. Each line is `make_id/model_id/year/file.jpg`.
+No path appears in both files. Both sides reference all 431 models and 75 of the 163 makes.
+Each line is `make_id/model_id/year/file.jpg`. Image paths themselves are not published
+(ADR-0002): boundaries are pinned by hashing the first and last three lines.
 
-## All distributed split files
+## Other distributed split files
 
-| File | Lines | Makes | Models | SHA-256 |
-|---|---:|---:|---:|---|
-| `classification/train.txt` | 16,016 | 75 | 431 | `9966d3e91b7dc735e224e04f5c53f33fbbe48d7c98e15509ca08e897d120ae9b` |
-| `classification/test.txt` | 14,939 | 75 | 431 | `474c4eac44f79ec378b7f755c79b25b14bcc1251450a2766bf03cdfcb7bb2dd0` |
-| `part/train_part_1.txt` | 1,470 | 75 | 431 | `d7133d783c2a80c87c8126e9b6c84008aba6f728f588e469e8dfdae9921fdb73` |
-| `part/train_part_2.txt` | 1,419 | 75 | 431 | `05c08dac8403ff31886fa1328b62ab2e6cb32e3f018f122527fa7fe38eeaae2c` |
-| `part/train_part_3.txt` | 1,308 | 75 | 431 | `ed9a30d5c9f6326bc0f6d2db5e65f0a971ee84892a09df53c46e53fc26e13acc` |
-| `part/train_part_4.txt` | 1,374 | 75 | 431 | `93322481d98d8936956404d371fb7b2324cd4cab0d5a30139b682427cc09f90e` |
-| `part/train_part_5.txt` | 1,359 | 75 | 431 | `b3824f7786c6e2c969b18c5141760cd641816bec11aa0c7a9c0fb04b1bc588f7` |
-| `part/train_part_6.txt` | 1,382 | 75 | 431 | `a4b7bdc58e25cb3a1ab9fe8c795125a0fea8dc8b491bec3451b9603e4ff9b5b8` |
-| `part/train_part_7.txt` | 1,373 | 75 | 431 | `808ec4d963881e5400450377d9fec71e2e6d507139a812127ea7348083068414` |
-| `part/train_part_8.txt` | 1,374 | 75 | 431 | `c17ebfe82564a2b8dd0b41ec140c0a90575787fb4d902f294b6935875ffbf833` |
-| `part/test_part_1.txt` | 1,246 | 75 | 431 | `f745695fd7c56b7eabf4470cbcb2b08d0733739c4bdf1080f13ff1edf1941b58` |
-| `part/test_part_2.txt` | 1,191 | 75 | 431 | `69fdb35de1e0f0989a60c7f3018a1c9e26623b3ace0b5fdd5fcf4f49470be9db` |
-| `part/test_part_3.txt` | 1,100 | 75 | 431 | `48fbf136b2f14b74d5a8c7d590fb6f609e640af6fd049f41a2722ae91cf1cd55` |
-| `part/test_part_4.txt` | 1,146 | 75 | 431 | `31f7d28bc85cb8fe9a1b3dc1b002ae6f1d6f60bb885d01c0267618a201f737e7` |
-| `part/test_part_5.txt` | 1,130 | 75 | 431 | `24cd6fd33ac06ef956a1b500798eceac645d4a6c98c6b88207146a4e2cc7eabb` |
-| `part/test_part_6.txt` | 1,166 | 74 | 430 | `7d563c90c1c39aecc397a5bd8b99bb802e7bc288e54a0809710e8501b268f990` |
-| `part/test_part_7.txt` | 1,152 | 74 | 430 | `dc8ea3a2f190c1b14fe3c5212be48a5b4d5176d242e10430bc89ef03d7a84f8c` |
-| `part/test_part_8.txt` | 1,159 | 75 | 431 | `c8ced4ca306e967b8706ae11eeef279678450231c406b43fe9127b0f1f9e216e` |
-| `verification/verification_train.txt` | 4,454 | 54 | 111 | `0641189066a6a086aee1ea171f371ab8cd2aefa3e2b05a21e8be561e7ffe3e63` |
-| `verification/verification_pairs_easy.txt` | 20,000 | 156 | 1137 | `7bb1dafd3d7c131027e2e3ac62bd7e1a3e8010d1c6b28b26fcc2df41eb7ca997` |
-| `verification/verification_pairs_medium.txt` | 20,000 | 156 | 1144 | `96489265d965aa34f1d2ae75b98eeba8649ec8d55910f07b668e52b0c1748b28` |
-| `verification/verification_pairs_hard.txt` | 20,000 | 156 | 1140 | `9a153f3c415d0c1ab0979d7287a7afa9799119e259962cb866b2bcf8f9ff2f49` |
+Hashed for completeness; not used by Track A. Full hashes and make/model counts (counted over
+every path on a line, so pair files count both sides) are in the JSON record.
 
-`part/*` files list car-part crops for the part-based classification experiment and
-`verification/*` list image pairs; they are recorded for completeness and are not used
-by Track A. Make and model counts for the verification pair files count the first path
-of each line only and are informational.
+| File | Lines | SHA-256 (prefix) |
+|---|---:|---|
+| `part/train_part_1.txt` | 1,470 | `d7133d783c2a80c8…` |
+| `part/train_part_2.txt` | 1,419 | `05c08dac8403ff31…` |
+| `part/train_part_3.txt` | 1,308 | `ed9a30d5c9f6326b…` |
+| `part/train_part_4.txt` | 1,374 | `93322481d98d8936…` |
+| `part/train_part_5.txt` | 1,359 | `b3824f7786c6e2c9…` |
+| `part/train_part_6.txt` | 1,382 | `a4b7bdc58e25cb3a…` |
+| `part/train_part_7.txt` | 1,373 | `808ec4d963881e54…` |
+| `part/train_part_8.txt` | 1,374 | `c17ebfe82564a2b8…` |
+| `part/test_part_1.txt` | 1,246 | `f745695fd7c56b7e…` |
+| `part/test_part_2.txt` | 1,191 | `69fdb35de1e0f098…` |
+| `part/test_part_3.txt` | 1,100 | `48fbf136b2f14b74…` |
+| `part/test_part_4.txt` | 1,146 | `31f7d28bc85cb8fe…` |
+| `part/test_part_5.txt` | 1,130 | `24cd6fd33ac06ef9…` |
+| `part/test_part_6.txt` | 1,166 | `7d563c90c1c39aec…` |
+| `part/test_part_7.txt` | 1,152 | `dc8ea3a2f190c1b1…` |
+| `part/test_part_8.txt` | 1,159 | `c8ced4ca306e967b…` |
+| `verification/verification_train.txt` | 4,454 | `0641189066a6a086…` |
+| `verification/verification_pairs_easy.txt` | 20,000 | `7bb1dafd3d7c1310…` |
+| `verification/verification_pairs_medium.txt` | 20,000 | `96489265d965aa34…` |
+| `verification/verification_pairs_hard.txt` | 20,000 | `9a153f3c415d0c1a…` |
