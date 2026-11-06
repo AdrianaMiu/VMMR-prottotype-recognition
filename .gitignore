@@ -25,7 +25,7 @@ outputs/
 .scratch/
 .env
 
-# tool-generated folders, never part of the project
-.agents/
-.claude/
+# editor and tool state: every top-level dot-folder except the CI workflows
+/.*/
+!/.github/
 /SKILL.md
