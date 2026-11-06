@@ -1,0 +1,4 @@
+make_id,make_name,model_id,model_name,compcars_year,canonical_model_name,generation_id,generation_name,generation_start_year,generation_end_year,facelift_phase,body_style_or_variant,market_region,source_url_1,source_url_2,source_title_1,source_title_2,accessed_at,mapping_status,reviewer_1,reviewer_2,review_notes,ambiguity_code
+999,Dacia,9991,Logan,2010,Dacia Logan,dacia_logan_g1,Logan I,2004,2012,pre_facelift,sedan,EU,,,,,,provisional,,,,
+999,Dacia,9991,Logan,2014,Dacia Logan,dacia_logan_g2,Logan II,2013,2020,none,sedan,EU,https://example.org/archive/logan-ii,,Example archive: Logan II,,2026-11-06,provisional,,,"second source still missing; see notes, pending",
+999,Dacia,9992,Sandero,2015,Dacia Sandero,dacia_sandero_g2,Sandero II,2012,2020,facelift,hatchback,,,,,,,ambiguous,,,,cross_market_year_conflict
