@@ -47,6 +47,7 @@ class CoverageStats(BaseModel):
     status_counts: dict[str, int]
     make_count: int
     model_count: int
+    models_without_valid_model_year: int
     classes_if_every_year_is_a_generation: int
     classes_if_all_years_merged: int
     span_min: int
@@ -80,7 +81,7 @@ def _per_model(queue: pd.DataFrame) -> pd.DataFrame:
     )
     for column in ("year_count", IMAGE_COUNT, "span_years", "max_gap"):
         per_model[column] = per_model[column].astype("int64")
-    return per_model
+    return per_model.sort_values(["make_id", "model_id"], ignore_index=True)
 
 
 def flag_models(
@@ -120,6 +121,7 @@ def coverage_stats(
         status_counts=dict(sorted(Counter(queue["mapping_status"]).items())),
         make_count=int(queue["make_id"].nunique()),
         model_count=len(per_model),
+        models_without_valid_model_year=int(manifest["model_id"].nunique()) - len(per_model),
         classes_if_every_year_is_a_generation=len(queue),
         classes_if_all_years_merged=len(per_model),
         span_min=span_min,
@@ -181,7 +183,8 @@ def render_report(stats: CoverageStats, queue_csv: Path, version: str) -> str:
         "## Candidate class counts",
         "",
         f"Makes: {stats.make_count}. Models with at least one valid model-year: "
-        f"{stats.model_count}.",
+        f"{stats.model_count}; models in the manifest whose every image is excluded "
+        f"(no valid year): {stats.models_without_valid_model_year}.",
         "",
         *_table(
             ["hypothesis", "classes"],
