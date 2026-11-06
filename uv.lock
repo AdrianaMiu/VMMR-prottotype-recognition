@@ -190,8 +190,10 @@ dependencies = [
     { name = "numpy" },
     { name = "omegaconf" },
     { name = "pandas" },
+    { name = "pillow" },
     { name = "pyarrow" },
     { name = "pydantic" },
+    { name = "scipy" },
 ]
 
 [package.optional-dependencies]
@@ -215,8 +217,10 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0,<3" },
     { name = "omegaconf", specifier = ">=2.3,<3" },
     { name = "pandas", specifier = ">=2.2,<3" },
+    { name = "pillow", specifier = ">=11,<14" },
     { name = "pyarrow", specifier = ">=19,<21" },
     { name = "pydantic", specifier = ">=2.11,<3" },
+    { name = "scipy", specifier = ">=1.15,<2" },
     { name = "torch", marker = "extra == 'gpu'", specifier = "==2.7.0", index = "https://download.pytorch.org/whl/cu126" },
     { name = "torchvision", marker = "extra == 'gpu'", specifier = "==0.22.0", index = "https://download.pytorch.org/whl/cu126" },
 ]
