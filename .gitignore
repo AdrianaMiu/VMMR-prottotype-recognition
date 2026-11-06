@@ -24,3 +24,8 @@ outputs/
 # scratch
 .scratch/
 .env
+
+# tool-generated folders, never part of the project
+.agents/
+.claude/
+/SKILL.md

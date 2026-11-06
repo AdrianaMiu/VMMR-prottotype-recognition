@@ -56,7 +56,10 @@ SPLIT_FILES = (
     "train_test_split/classification/test.txt",
     *(f"train_test_split/part/{s}_part_{i}.txt" for s in ("train", "test") for i in range(1, 9)),
     "train_test_split/verification/verification_train.txt",
-    *(f"train_test_split/verification/verification_pairs_{d}.txt" for d in ("easy", "medium", "hard")),
+    *(
+        f"train_test_split/verification/verification_pairs_{d}.txt"
+        for d in ("easy", "medium", "hard")
+    ),
 )
 
 
