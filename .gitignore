@@ -29,5 +29,4 @@ outputs/
 /.*/
 !/.github/
 !/.dvc/
-/SKILL.md
-/skills-lock.json
+/*-lock.json
