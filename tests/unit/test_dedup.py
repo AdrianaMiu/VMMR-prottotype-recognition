@@ -16,11 +16,13 @@ from PIL import Image, ImageEnhance
 
 from avr.config import load_config
 from avr.data.dedup import (
+    PANEL_HEIGHT,
     UnionFind,
     assign_duplicate_groups,
     compute_phashes,
     group_images,
     hamming_pairs,
+    write_report,
 )
 from avr.data.manifest import ImageRow, summarise
 
@@ -144,6 +146,26 @@ def test_groups_close_transitively_and_count_cross_label_evidence():
     assert result.stats.groups_crossing_make == 1
     assert result.stats.histogram == {0: 1, 2: 2, 6: 1, 8: 2}
     assert result.stats.phash_hamming_threshold == 6
+    assert result.stats.group_size_histogram == {4: 1}
+    # what the grouping would be at every lower threshold: (groups, images, largest, crossing)
+    assert [
+        (
+            s.threshold,
+            s.duplicate_groups,
+            s.duplicate_images,
+            s.largest_group_size,
+            s.groups_crossing_model,
+        )
+        for s in result.stats.threshold_sweep
+    ] == [
+        (0, 1, 2, 2, 1),
+        (1, 1, 2, 2, 1),
+        (2, 1, 3, 3, 1),
+        (3, 1, 3, 3, 1),
+        (4, 1, 3, 3, 1),
+        (5, 1, 3, 3, 1),
+        (6, 1, 4, 4, 1),
+    ]
 
 
 def test_near_threshold_pairs_are_those_at_the_threshold_or_one_below():
@@ -164,3 +186,27 @@ def test_manifest_summary_counts_multi_image_groups_once_ids_are_assigned():
 
     assert summary["duplicate_group_count"] == 1
     assert summary["duplicate_image_count"] == 4
+
+
+def test_report_writes_readme_csv_and_capped_side_by_side_panels(
+    duplicate_images: dict[str, Path], tmp_path: Path
+):
+    result = assign_duplicate_groups(HAND_ROWS, threshold=2)
+    image_paths = dict(zip("abcde", duplicate_images.values(), strict=True))
+    out = tmp_path / "report"
+
+    written = write_report(result, image_paths, out, max_pairs=1, runtime_seconds=12.5)
+
+    readme = (out / "README.md").read_text()
+    assert "phash_hamming_threshold: 2" in readme
+    assert "| 2 | 2 |" in readme  # histogram row: distance 2, two pairs
+    csv_lines = (out / "near_threshold_pairs.csv").read_text().splitlines()
+    header = "panel,image_id_a,image_id_b,distance,same_model,make_model_a,make_model_b"
+    assert csv_lines[0] == header
+    assert csv_lines[1:] == ["00_a_c_d2.jpg,a,c,2,True,1/1,1/1", ",b,c,2,False,1/2,1/1"]
+    panels = sorted(p.name for p in (out / "pairs").iterdir())
+    assert panels == ["00_a_c_d2.jpg"]
+    with Image.open(out / "pairs" / panels[0]) as panel:
+        assert panel.height == PANEL_HEIGHT
+        assert panel.width > 2 * PANEL_HEIGHT * 0.9  # two 128 px squares, scaled, plus gap
+    assert written == [out / "README.md", out / "near_threshold_pairs.csv"]
