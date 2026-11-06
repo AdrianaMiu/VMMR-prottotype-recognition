@@ -1,0 +1,22 @@
+# Frozen detector/segmenter used for P2 and P3 (PROTOCOL.md §8). Same registry discipline as
+# configs/encoders: the checkpoint is pinned by file digest, never by "latest".
+name: rfdetr_seg
+adapter: avr.segmentation.rfdetr_seg.RFDETRSegmenter
+package: rfdetr
+package_version: "1.12.0"   # resolved by uv.lock; rfdetr.RFDETRSegMedium
+variant: medium             # RFDETRSegMedium, DINOv2-small backbone, 432 px, 200 queries
+resolution: 432
+licence: Apache-2.0         # rfdetr-1.12.0.dist-info/licenses/LICENSE (Roboflow, 2025)
+checkpoint:
+  filename: rf-detr-seg-medium.pt
+  # Registered in rfdetr.assets.model_weights.ModelWeights.RF_DETR_SEG_MEDIUM. The package
+  # downloads it into $RF_HOME (default ~/.roboflow/models) and validates the md5 below;
+  # rfdetr 1.8.3 served the same md5 from https://storage.googleapis.com/rfdetr/rf-detr-seg-m-ft.pth.
+  url: https://repo.roboflow.com/rfdetr/rf-detr-seg-m-ft.pth
+  revision: rf-detr-seg-m-ft (COCO fine-tune, Roboflow release; no further version tag)
+  size_bytes: 143024058
+  md5: a49af1562c3719227ad43d0ca53b4c7a
+  sha256: 3ad325094735f431aee9962a8d204d68eb5bfc393d53e7e836e70998fef5ea58
+threshold: 0.3              # detection confidence kept; instance selection is by GT-box IoU
+labels: [car, truck, bus]   # COCO vehicle classes kept
+batch_size: 16

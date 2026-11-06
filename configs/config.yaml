@@ -4,6 +4,7 @@ defaults:
   - datasets@dataset: compcars_web
   - encoders@encoder: dinov3_vitb16
   - preprocessing@preprocessing: p1_bbox_crop
+  - segmentation@segmentation: rfdetr_seg
   - experiments@experiment: e0_pipeline_validation
   - tracking@tracking: local
   - _self_
