@@ -1,9 +1,10 @@
-# Root composition. Each group selects one file from its directory.
+# Root composition. Each group directory follows PROTOCOL.md §18; the `@key` binds the
+# selected file to a singular top-level key (cfg.dataset, cfg.encoder, ...).
 defaults:
-  - dataset: compcars_web
-  - encoder: dinov3_vitb16
-  - preprocessing: p1_bbox_crop
-  - experiment: e0_pipeline_validation
+  - datasets@dataset: compcars_web
+  - encoders@encoder: dinov3_vitb16
+  - preprocessing@preprocessing: p1_bbox_crop
+  - experiments@experiment: e0_pipeline_validation
   - _self_
 
 seed: 73

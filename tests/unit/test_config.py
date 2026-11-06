@@ -9,6 +9,6 @@ def test_default_config_composes_the_three_experiment_groups():
 
 
 def test_overrides_select_a_named_group_entry():
-    cfg = load_config(overrides=["encoder=dinov3_vitb16"])
+    cfg = load_config(overrides=["encoders@encoder=siglip2_so400m_naflex"])
 
-    assert cfg.encoder.model_id == "facebook/dinov3-vitb16-pretrain-lvd1689m"
+    assert cfg.encoder.model_id == "google/siglip2-so400m-patch16-naflex"

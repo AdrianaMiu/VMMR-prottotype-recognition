@@ -1,0 +1,3 @@
+# SigLIP2 primary per ADR-0003. Registry fields are completed and verified in issue #5.
+name: siglip2_so400m_naflex
+model_id: google/siglip2-so400m-patch16-naflex
