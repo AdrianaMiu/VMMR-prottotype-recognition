@@ -1,0 +1,26 @@
+# environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# data: CompCars images and any path table are never committed
+data/external/
+data/paths/
+*.parquet
+!data/manifests/**/*.parquet
+*.pkl
+*.npy
+*.safetensors
+
+# experiment tracking
+mlruns/
+outputs/
+.dvc/cache/
+
+# scratch
+.scratch/
+.env
