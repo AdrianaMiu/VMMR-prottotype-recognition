@@ -10,9 +10,10 @@ with opaque ``image_id`` + ``sha256`` and every §7 field except ``relative_path
 private ``image_id -> relative_path`` table under ``data/paths/``. Rows are sorted by
 ``image_id`` and written with fixed schemas so repeated builds are byte-identical.
 
-Columns reserved for later tickets stay null here: ``phash`` and ``duplicate_group_id``
-(M1-8), ``split_track_a`` (M1-9), ``split_track_b_seed`` (M1-10), ``generation_id`` and
-``mapping_version`` (generation mapping), ``source_group_id``.
+``build_manifest`` leaves ``phash``, ``duplicate_group_id`` and ``source_group_id`` null;
+``avr.data.dedup`` fills them (M1-8). Columns reserved for later tickets stay null here:
+``split_track_a`` (M1-9), ``split_track_b_seed`` (M1-10), ``generation_id`` and
+``mapping_version`` (generation mapping).
 """
 
 from __future__ import annotations
@@ -222,7 +223,7 @@ def build_manifest(root: Path, workers: int | None = None) -> list[ImageRow]:
 
 
 def summarise(rows: list[ImageRow]) -> dict:
-    return {
+    summary = {
         "row_count": len(rows),
         "valid_count": sum(r.validity_status == "valid" for r in rows),
         "exclusion_reason_counts": dict(
@@ -234,6 +235,12 @@ def summarise(rows: list[ImageRow]) -> dict:
         "make_count": len({r.make_id for r in rows}),
         "model_count": len({r.model_id for r in rows}),
     }
+    group_sizes = Counter(r.duplicate_group_id for r in rows if r.duplicate_group_id)
+    if group_sizes:
+        multi = [n for n in group_sizes.values() if n > 1]
+        summary["duplicate_group_count"] = len(multi)
+        summary["duplicate_image_count"] = sum(multi)
+    return summary
 
 
 def write_manifest(rows: list[ImageRow], manifests_dir: Path, paths_dir: Path) -> ManifestOutputs:

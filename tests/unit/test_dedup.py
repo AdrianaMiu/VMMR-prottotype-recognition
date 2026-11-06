@@ -15,7 +15,14 @@ import pytest
 from PIL import Image, ImageEnhance
 
 from avr.config import load_config
-from avr.data.dedup import UnionFind, compute_phashes, group_images, hamming_pairs
+from avr.data.dedup import (
+    UnionFind,
+    assign_duplicate_groups,
+    compute_phashes,
+    group_images,
+    hamming_pairs,
+)
+from avr.data.manifest import ImageRow, summarise
 
 
 def test_union_find_groups_are_transitive_without_a_direct_link():
@@ -90,3 +97,70 @@ def test_threshold_zero_keeps_only_the_exact_copy_in_the_group(duplicate_images:
 
     assert groups["original"] == groups["exact"]
     assert groups["resized"] != groups["original"]
+
+
+def row(image_id: str, sha256: str, phash: str, make_id: int, model_id: int) -> ImageRow:
+    return ImageRow(
+        image_id=image_id,
+        relative_path=f"image/{make_id}/{model_id}/2010/{image_id}.jpg",
+        sha256=sha256,
+        phash=phash,
+        width=8,
+        height=8,
+        make_id=make_id,
+        make_name=f"make{make_id}",
+        model_id=model_id,
+        model_name=f"model{model_id}",
+        year=2010,
+        viewpoint=1,
+        bbox_xyxy=(0, 0, 7, 7),
+        validity_status="valid",
+        exclusion_reason=None,
+    )
+
+
+# Hand-counted Hamming distances between the hex hashes: a-b 0 (same bytes), a-c 2,
+# a-d 8, c-d 6, e is 56..64 bits from every other hash.
+HAND_ROWS = [
+    row("a", "s1", "0000000000000000", 1, 1),
+    row("b", "s1", "0000000000000000", 1, 2),
+    row("c", "s2", "0000000000000003", 1, 1),
+    row("d", "s3", "00000000000000ff", 2, 3),
+    row("e", "s4", "ffffffffffffffff", 2, 3),
+]
+
+
+def test_groups_close_transitively_and_count_cross_label_evidence():
+    result = assign_duplicate_groups(HAND_ROWS, threshold=6)
+
+    groups = {r.image_id: r.duplicate_group_id for r in result.rows}
+    assert groups == {"a": "a", "b": "a", "c": "a", "d": "a", "e": "e"}
+    assert all(r.source_group_id == r.duplicate_group_id for r in result.rows)
+    assert result.stats.exact_duplicate_groups == 1
+    assert result.stats.exact_duplicate_images == 2
+    assert result.stats.near_duplicate_groups == 1
+    assert result.stats.near_duplicate_images == 4
+    assert result.stats.groups_crossing_model == 1
+    assert result.stats.groups_crossing_make == 1
+    assert result.stats.histogram == {0: 1, 2: 2, 6: 1, 8: 2}
+    assert result.stats.phash_hamming_threshold == 6
+
+
+def test_near_threshold_pairs_are_those_at_the_threshold_or_one_below():
+    result = assign_duplicate_groups(HAND_ROWS, threshold=2)
+
+    assert [(p.image_id_a, p.image_id_b, p.distance) for p in result.near_threshold_pairs] == [
+        ("a", "c", 2),
+        ("b", "c", 2),
+    ]
+    assert result.near_threshold_pairs[0].same_model is True
+    assert result.near_threshold_pairs[1].same_model is False
+
+
+def test_manifest_summary_counts_multi_image_groups_once_ids_are_assigned():
+    assert "duplicate_group_count" not in summarise(HAND_ROWS)
+
+    summary = summarise(assign_duplicate_groups(HAND_ROWS, threshold=6).rows)
+
+    assert summary["duplicate_group_count"] == 1
+    assert summary["duplicate_image_count"] == 4
