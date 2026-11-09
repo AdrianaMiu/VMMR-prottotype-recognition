@@ -1,0 +1,5 @@
+outs:
+- md5: 86266fab23c9d2daabc2bf2bb81a61f7
+  size: 1859900
+  hash: md5
+  path: m0_track_a_official_cvpr2015.parquet

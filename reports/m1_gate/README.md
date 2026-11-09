@@ -24,7 +24,7 @@ Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and t
 
 Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
-Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`. P3 mask metadata sha256: `not recorded`.
+Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`. P3 mask metadata sha256: `not_applicable`.
 
 ### official_full
 
@@ -90,15 +90,15 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 16.82 / 15.59 | 2091.8 / 2426.7 |
+| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 13.47 / 11.35 | 2102.2 / 2425.3 |
 
-Run manifest `m1_gate_track_a_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_a_p1_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
 
 ## track_a p3
 
 Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
-Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`. P3 mask metadata sha256: `not recorded`.
+Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`. P3 mask metadata sha256: `bb17a917201b43ca4db4aeb748b784b1d7271ca417bd2fd692137d9223d663b8`.
 
 ### official_full
 
@@ -164,15 +164,15 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 15.23 / 12.54 | 2166.5 / 2504.5 |
+| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 12.49 / 11.65 | 2102.8 / 2476.0 |
 
-Run manifest `m1_gate_track_a_p3_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_a_p3_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
 
 ## track_b p1
 
 Split: `track_b_seed_73` (primary seed 73); classes are the provisional model-year stand-ins, every row `mapping_status = provisional`.
 
-Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_b_p1.json`. P3 mask metadata sha256: `not recorded`.
+Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_b_p1.json`. P3 mask metadata sha256: `not_applicable`.
 
 ### test
 
@@ -242,15 +242,15 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 240.92 / 168.78 | 6416.2 / 7653.7 |
+| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 83.5 / 84.49 | 6430.1 / 7663.4 |
 
-Run manifest `m1_gate_track_b_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_b_p1_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
 
 ## track_b p3
 
 Split: `track_b_seed_73` (primary seed 73); classes are the provisional model-year stand-ins, every row `mapping_status = provisional`.
 
-Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_b_p3.json`. P3 mask metadata sha256: `not recorded`.
+Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_b_p3.json`. P3 mask metadata sha256: `bb17a917201b43ca4db4aeb748b784b1d7271ca417bd2fd692137d9223d663b8`.
 
 ### test
 
@@ -320,6 +320,6 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 96.46 / 101.62 | 6429.1 / 7677.7 |
+| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 76.17 / 82.79 | 6435.8 / 7700.5 |
 
-Run manifest `m1_gate_track_b_p3_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_b_p3_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
