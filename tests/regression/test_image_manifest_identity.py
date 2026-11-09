@@ -28,7 +28,8 @@ ROOT = (REPO_ROOT / CFG.dataset.root).resolve()
 
 # From the format notes: 136,726 label files, 17 ``unknown`` year folders (343 images),
 # one typo folder ``5008`` (8 images), 10 degenerate boxes; the duplicate counts are the
-# recorded outcome of the first dedup run and change only with the threshold or hash.
+# recorded outcome of the dedup run at the configured threshold (ADR-0005) and change
+# only with the threshold or hash.
 EXPECTED_SUMMARY = {
     "row_count": 136726,
     "valid_count": 136365,
@@ -40,9 +41,9 @@ EXPECTED_SUMMARY = {
     "viewpoint_counts": {"-1": 780, "1": 18431, "2": 13513, "3": 23551, "4": 49301, "5": 31150},
     "make_count": 163,
     "model_count": 1716,
-    # groups of size >= 2 at phash_hamming_threshold 6 (reports/dedup/README.md)
-    "duplicate_group_count": 2593,
-    "duplicate_image_count": 6748,
+    # groups of size >= 2 at phash_hamming_threshold 2 (ADR-0005, reports/dedup/README.md)
+    "duplicate_group_count": 998,
+    "duplicate_image_count": 2065,
 }
 
 

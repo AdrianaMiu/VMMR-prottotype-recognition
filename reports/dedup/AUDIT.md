@@ -40,7 +40,7 @@ At 6 the grouping is safe for leakage (every true duplicate is linked) but it me
 unrelated cars into one component, so a group-aware split would move 695 images of
 379 models together. At 2 the groups are almost all true duplicates and the largest is 6.
 
-## Recommendation (not applied; the threshold stays at the configured 6)
+## Recommendation (from the first run; applied below)
 
 Lower `phash_hamming_threshold` to 2 (or 4) in `configs/dedup/default.yaml`, or keep 6
 and only link pairs that also share `make_id/model_id` for the near case while keeping
@@ -48,3 +48,24 @@ cross-model links for distance 0 and exact matches. Either change must be record
 protocol decision because PROTOCOL.md §7 asks for a recorded threshold, and the manifest
 hash in `data/manifests/compcars_web_images.sha256` and the summary counts in
 `tests/regression/test_image_manifest_identity.py` must be re-recorded after a rebuild.
+
+## Applied (ADR-0005)
+
+`docs/adr/0005-phash-threshold-2.md` accepts the recommendation: `phash_hamming_threshold`
+is 2 in `configs/dedup/default.yaml`, exact SHA-256 duplicates stay grouped regardless of
+distance, and the manifest was rebuilt (209 s on 32 cores, 136,726 images, all hashed).
+The grouping now matches the threshold-2 row of the sweep above:
+
+| quantity | threshold 6 (first run) | threshold 2 (applied) |
+|---|---|---|
+| duplicate groups (size >= 2) | 2,593 | 998 |
+| images in those groups | 6,748 | 2,065 |
+| largest group | 695 | 6 |
+| groups crossing make/model | 628 | 142 |
+| groups crossing make | 470 | 26 |
+
+Of the 998 groups, 52 are byte-identical pairs and 948 hold at least one pHash link between
+distinct bytes. `near_threshold_pairs.csv` now lists every linked pHash pair, 615 at distance
+0 and 517 at distance 2, and the 50 exported panels are spread over both distances. The
+manifest hash in `data/manifests/compcars_web_images.sha256` and the summary counts in
+`tests/regression/test_image_manifest_identity.py` were re-recorded.

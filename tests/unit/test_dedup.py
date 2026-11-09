@@ -168,15 +168,21 @@ def test_groups_close_transitively_and_count_cross_label_evidence():
     ]
 
 
-def test_near_threshold_pairs_are_those_at_the_threshold_or_one_below():
+def test_near_threshold_pairs_are_every_phash_pair_within_the_threshold():
+    # ADR-0005: at threshold 2 the audit list holds the distance-0 and distance-2 pairs,
+    # so a-b (distance 0, same bytes) is listed before the two distance-2 pairs.
     result = assign_duplicate_groups(HAND_ROWS, threshold=2)
 
     assert [(p.image_id_a, p.image_id_b, p.distance) for p in result.near_threshold_pairs] == [
+        ("a", "b", 0),
         ("a", "c", 2),
         ("b", "c", 2),
     ]
-    assert result.near_threshold_pairs[0].same_model is True
-    assert result.near_threshold_pairs[1].same_model is False
+    assert result.near_threshold_pairs[0].same_model is False
+    assert result.near_threshold_pairs[1].same_model is True
+    assert result.near_threshold_pairs[2].same_model is False
+    # a-d (8) and c-d (6) lie above the threshold and are not listed
+    assert all(p.distance <= 2 for p in result.near_threshold_pairs)
 
 
 def test_manifest_summary_counts_multi_image_groups_once_ids_are_assigned():
@@ -203,9 +209,13 @@ def test_report_writes_readme_csv_and_capped_side_by_side_panels(
     csv_lines = (out / "near_threshold_pairs.csv").read_text().splitlines()
     header = "panel,image_id_a,image_id_b,distance,same_model,make_model_a,make_model_b"
     assert csv_lines[0] == header
-    assert csv_lines[1:] == ["00_a_c_d2.jpg,a,c,2,True,1/1,1/1", ",b,c,2,False,1/2,1/1"]
+    assert csv_lines[1:] == [
+        "00_a_b_d0.jpg,a,b,0,False,1/1,1/2",
+        ",a,c,2,True,1/1,1/1",
+        ",b,c,2,False,1/2,1/1",
+    ]
     panels = sorted(p.name for p in (out / "pairs").iterdir())
-    assert panels == ["00_a_c_d2.jpg"]
+    assert panels == ["00_a_b_d0.jpg"]
     with Image.open(out / "pairs" / panels[0]) as panel:
         assert panel.height == PANEL_HEIGHT
         assert panel.width > 2 * PANEL_HEIGHT * 0.9  # two 128 px squares, scaled, plus gap
