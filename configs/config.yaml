@@ -9,6 +9,7 @@ defaults:
   - extraction@extraction: embeddings
   - tracking@tracking: local
   - dedup@dedup: default
+  - service@service: qdrant
   - splits@split_track_b: track_b
   - _self_
 

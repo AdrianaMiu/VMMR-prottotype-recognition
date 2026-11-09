@@ -56,7 +56,14 @@ def is_ignored(path: Path) -> bool:
 
 @pytest.mark.parametrize(
     "relative_dir",
-    ["data/paths", "data/external", "data/masks", "data/embeddings", "data/qdrant"],
+    [
+        "data/paths",
+        "data/external",
+        "data/masks",
+        "data/embeddings",
+        "data/qdrant",
+        "data/qdrant_server",
+    ],
 )
 def test_path_table_and_external_data_are_ignored(relative_dir: str):
     with dummy_file(relative_dir) as path:

@@ -1,0 +1,11 @@
+# Qdrant server reached over REST (PROTOCOL.md §12 "Online service"; issue M5-1). The server
+# is started by docker/docker-compose.yml; `scripts/load_qdrant_server.py` fills it from the
+# prototype tables. `exact: true` keeps evaluation on exact search (§12: approximate search
+# only after exact-versus-ANN recall and latency are measured). The `AVR_QDRANT_URL` and
+# `AVR_QDRANT_API_KEY` environment variables override `url` and `api_key` when set.
+name: qdrant
+qdrant:
+  url: http://localhost:6333
+  api_key: null
+  timeout_s: 30
+  exact: true
