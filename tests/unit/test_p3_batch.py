@@ -59,7 +59,9 @@ def test_run_batch_writes_one_shard_per_chunk_and_resumes_only_missing_shards(tm
     jobs = _tree(root)
     seg = FakeSegmenter()
 
-    written = run_batch(root, jobs, seg, masks, shards, shard_size=2, batch_size=3)
+    written = run_batch(
+        root, jobs, seg, masks, shards, shard_size=2, batch_size=3, expand=0.05, min_iou=0.5
+    )
 
     assert [p.name for p in written] == [
         "shard_00000.parquet",
@@ -72,7 +74,7 @@ def test_run_batch_writes_one_shard_per_chunk_and_resumes_only_missing_shards(tm
 
     (shards / "shard_00001.parquet").unlink()
     seg.seen.clear()
-    run_batch(root, jobs, seg, masks, shards, shard_size=2, batch_size=3)
+    run_batch(root, jobs, seg, masks, shards, shard_size=2, batch_size=3, expand=0.05, min_iou=0.5)
 
     assert seg.seen == [(22, 20), (23, 20)]
 
@@ -82,7 +84,17 @@ def test_merge_shards_builds_the_metadata_table_with_sha256_and_summary(tmp_path
         tmp_path / n for n in ("root", "masks", "shards", "manifests")
     )
     jobs = _tree(root)
-    run_batch(root, jobs, FakeSegmenter(), masks, shards, shard_size=2, batch_size=2)
+    run_batch(
+        root,
+        jobs,
+        FakeSegmenter(),
+        masks,
+        shards,
+        shard_size=2,
+        batch_size=2,
+        expand=0.05,
+        min_iou=0.5,
+    )
 
     out = merge_shards(shards, manifests)
 

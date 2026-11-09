@@ -16,7 +16,7 @@ from typing import Literal
 import numpy as np
 from PIL import Image
 
-from avr.preprocessing.crop import NEUTRAL_RGB, crop_with_padding, p1_crop_box
+from avr.preprocessing.crop import NEUTRAL_RGB, P1_EXPAND_FRACTION, crop_with_padding, p1_crop_box
 from avr.preprocessing.p3 import project_mask
 
 Variant = Literal["p1", "p3"]
@@ -28,7 +28,7 @@ def prepare(
     bbox_xyxy: tuple[int, int, int, int],
     variant: Variant,
     mask: np.ndarray | None = None,
-    expand: float = 0.05,
+    expand: float = P1_EXPAND_FRACTION,
     background: tuple[int, int, int] = NEUTRAL_RGB,
 ) -> Image.Image:
     """Crop ``image`` for ``variant``; P3 needs a boolean ``mask`` (full-image or crop-sized)."""

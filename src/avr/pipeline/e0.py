@@ -403,7 +403,8 @@ def build_fixture(
     n_query: int = FIXTURE_QUERY,
     seed: int = FIXTURE_SEED,
     batch_size: int = 32,
-    expand: float = 0.05,
+    *,
+    expand: float,
     tracking_dir: Path | None = None,
 ) -> dict[str, float]:
     """Select the split, embed its P1 crops, write the fixture and record its metrics.

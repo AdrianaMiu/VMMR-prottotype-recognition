@@ -109,6 +109,7 @@ def test_build_fixture_writes_every_file_and_the_colour_embeddings(toy_release, 
         n_query=1,
         seed=73,
         batch_size=4,
+        expand=0.05,
         tracking_dir=tmp_path / "mlruns",
     )
 
