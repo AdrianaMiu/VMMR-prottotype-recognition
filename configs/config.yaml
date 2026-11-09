@@ -9,6 +9,7 @@ defaults:
   - extraction@extraction: embeddings
   - tracking@tracking: local
   - dedup@dedup: default
+  - splits@split_track_b: track_b
   - _self_
 
 seed: 73
