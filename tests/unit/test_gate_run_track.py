@@ -291,6 +291,16 @@ def test_p1_records_no_mask_metadata(track_a: GateInputs):
     assert run_track(track_a).results["mask_metadata_sha256"] == "not_applicable"
 
 
+def test_result_paths_are_repo_relative(track_a: GateInputs):
+    r = run_track(track_a).results
+    recorded = (r["prototypes"]["parquet"], r["qdrant"]["path"], r["embedding_store"]["directory"])
+    for value in recorded:
+        assert not Path(value).is_absolute(), value
+        assert "/home/" not in value, value
+    # the tmp_path inputs lie outside the repository, so the records climb out of it
+    assert r["prototypes"]["parquet"].endswith("toy/p1/m0_track_a_official_cvpr2015.parquet")
+
+
 def test_p3_needs_mask_metadata_and_records_its_verified_digest(track_a: GateInputs):
     import mlflow
 

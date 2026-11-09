@@ -14,7 +14,7 @@
     "preprocessing_id": "dinov3_vit16_224_v1",
     "variant": "p3",
     "dtype": "float16",
-    "directory": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/data/embeddings/dinov3_vitb16/p3",
+    "directory": "../../data/embeddings/dinov3_vitb16/p3",
     "rows": 136097,
     "dimension": 768,
     "shards": 137
@@ -2250,7 +2250,7 @@
     }
   },
   "prototypes": {
-    "parquet": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet",
+    "parquet": "data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet",
     "parquet_sha256": "56f0d5d1a691b81f2a87058cddbd283f3ce6f75de1d5ce942d194c0529ac0754",
     "class_count": 431,
     "support_counts": {
@@ -2260,7 +2260,7 @@
     }
   },
   "qdrant": {
-    "path": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/qdrant",
+    "path": "data/qdrant",
     "collection": "track_a_official_cvpr2015__none__dinov3_vitb16__dinov3_vit16_224_v1+p3__768__m0_global_mean",
     "point_count": 431,
     "dimension": 768,

@@ -79,7 +79,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p1/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `df146806d74b0dbe61d516449f6d36f524fcf2f1b6686b5197cc82b937d4ffe1`
+- Parquet `data/prototypes/dinov3_vitb16/p1/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `df146806d74b0dbe61d516449f6d36f524fcf2f1b6686b5197cc82b937d4ffe1`
 - Qdrant collection `track_a_official_cvpr2015__none__dinov3_vitb16__dinov3_vit16_224_v1+p1__768__m0_global_mean` (431 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 999, equal within score tolerance 1e-05 1, passed: yes
 
@@ -153,7 +153,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `56f0d5d1a691b81f2a87058cddbd283f3ce6f75de1d5ce942d194c0529ac0754`
+- Parquet `data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `56f0d5d1a691b81f2a87058cddbd283f3ce6f75de1d5ce942d194c0529ac0754`
 - Qdrant collection `track_a_official_cvpr2015__none__dinov3_vitb16__dinov3_vit16_224_v1+p3__768__m0_global_mean` (431 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 1000, equal within score tolerance 1e-05 0, passed: yes
 
@@ -231,7 +231,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p1/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 11, max 101), sha256 `e68f9f37c57ee289d2283ca2b2154ab7c4a93a8bc83e8d7ad7feff80e7adc2dd`
+- Parquet `data/prototypes/dinov3_vitb16/p1/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 11, max 101), sha256 `e68f9f37c57ee289d2283ca2b2154ab7c4a93a8bc83e8d7ad7feff80e7adc2dd`
 - Qdrant collection `track_b_seed_73__v0.1_provisional__dinov3_vitb16__dinov3_vit16_224_v1+p1__768__m0_global_mean` (2645 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 1000, equal within score tolerance 1e-05 0, passed: yes
 
@@ -309,7 +309,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p3/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 7, max 101), sha256 `3807cf838d4adc2c1b0fc3a07a7bb1df1acb5ccf08155f2070679dc1be563c8a`
+- Parquet `data/prototypes/dinov3_vitb16/p3/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 7, max 101), sha256 `3807cf838d4adc2c1b0fc3a07a7bb1df1acb5ccf08155f2070679dc1be563c8a`
 - Qdrant collection `track_b_seed_73__v0.1_provisional__dinov3_vitb16__dinov3_vit16_224_v1+p3__768__m0_global_mean` (2645 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 999, equal within score tolerance 1e-05 1, passed: yes
 

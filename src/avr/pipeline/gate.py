@@ -42,7 +42,7 @@ from avr.encoders.store import EmbeddingStore
 from avr.evaluation.classification import ClassificationMetrics, classification_metrics
 from avr.evaluation.hierarchy import error_decomposition, parent_ranking_metrics
 from avr.evaluation.ranking import RankingMetrics, ranking_metrics
-from avr.io import read_sidecar_sha256, sha256_of_file
+from avr.io import read_sidecar_sha256, repo_relative, sha256_of_file
 from avr.pipeline.e0 import PROTOTYPE_METHOD, class_id_of
 from avr.prototypes.m0 import build_global_mean_prototypes
 from avr.prototypes.persist import (
@@ -550,14 +550,14 @@ def run_track(inputs: GateInputs) -> GateResult:
         "mask_metadata_sha256": mask_metadata_digest,
         "embedding_store": {
             **identity.model_dump(),
-            "directory": str(store.directory),
+            "directory": repo_relative(store.directory),
             "rows": int(matrix.shape[0]),
             "dimension": int(matrix.shape[1]),
             "shards": len(store.finished_shards()),
         },
         "evaluations": outputs,
         "prototypes": {
-            "parquet": str(written.parquet),
+            "parquet": repo_relative(written.parquet),
             "parquet_sha256": sha256_of_file(written.parquet),
             "class_count": table.num_rows,
             "support_counts": {
@@ -567,7 +567,7 @@ def run_track(inputs: GateInputs) -> GateResult:
             },
         },
         "qdrant": {
-            "path": str(inputs.qdrant_dir),
+            "path": repo_relative(inputs.qdrant_dir),
             **export.model_dump(),
             "parity": parity,
         },

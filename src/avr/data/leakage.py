@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 from avr.data.manifest import IMAGE_DIR, MAX_YEAR, MIN_YEAR, UNKNOWN_YEAR_FOLDER
 from avr.data.names import NameTables
-from avr.io import read_sidecar_sha256, sha256_of_file
+from avr.io import read_sidecar_sha256, repo_relative, sha256_of_file
 
 ID_CAP = 50
 OFFICIAL_SPLIT_STATUS = "reported, official split not altered"
@@ -361,5 +361,5 @@ def e0_fixture_findings(fixture_dir: Path) -> tuple[list[Finding], dict[str, str
             note=f"slice {slice_digest}, split.json {pinned}",
         )
     )
-    inputs = {"fixture": str(fixture_dir), "manifest_slice sha256": slice_digest}
+    inputs = {"fixture": repo_relative(fixture_dir), "manifest_slice sha256": slice_digest}
     return findings, inputs
