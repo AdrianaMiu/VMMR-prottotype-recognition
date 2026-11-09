@@ -54,7 +54,9 @@ def is_ignored(path: Path) -> bool:
     return result.returncode == 0
 
 
-@pytest.mark.parametrize("relative_dir", ["data/paths", "data/external", "data/masks"])
+@pytest.mark.parametrize(
+    "relative_dir", ["data/paths", "data/external", "data/masks", "data/embeddings"]
+)
 def test_path_table_and_external_data_are_ignored(relative_dir: str):
     with dummy_file(relative_dir) as path:
         assert is_ignored(path), f"{relative_dir}/ must be git-ignored"

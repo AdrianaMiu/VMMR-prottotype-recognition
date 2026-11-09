@@ -6,6 +6,7 @@ defaults:
   - preprocessing@preprocessing: p1_bbox_crop
   - segmentation@segmentation: rfdetr_seg
   - experiments@experiment: e0_pipeline_validation
+  - extraction@extraction: embeddings
   - tracking@tracking: local
   - dedup@dedup: default
   - _self_
