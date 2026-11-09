@@ -31,3 +31,6 @@ outputs/
 !/.github/
 !/.dvc/
 /*-lock.json
+
+# derived embeddings (resumable per-shard store, PROTOCOL.md §9)
+data/embeddings/

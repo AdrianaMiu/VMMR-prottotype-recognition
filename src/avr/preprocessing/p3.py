@@ -58,7 +58,7 @@ def select_instance(
     return best, box_iou(gt_bbox, best.bbox_xyxy)
 
 
-def _project_mask(mask: np.ndarray, box: BoxXYXY) -> np.ndarray:
+def project_mask(mask: np.ndarray, box: BoxXYXY) -> np.ndarray:
     """Cut the full-image mask to ``box``; pixels outside the image count as background."""
     x1, y1, x2, y2 = box
     out = np.zeros((y2 - y1, x2 - x1), dtype=bool)
@@ -96,7 +96,7 @@ def build_p3(
             None,
             instance.score,
         )
-    mask = _project_mask(instance.mask, box)
+    mask = project_mask(instance.mask, box)
     p3_arr = np.asarray(p1).copy()
     p3_arr[~mask] = background
     p3 = Image.fromarray(p3_arr, "RGB")
