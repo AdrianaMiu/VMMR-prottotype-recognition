@@ -31,3 +31,6 @@ outputs/
 !/.github/
 !/.dvc/
 /*-lock.json
+
+# dedup audit panels are CompCars pixels; the pair list is committed as CSV instead
+reports/dedup/pairs/

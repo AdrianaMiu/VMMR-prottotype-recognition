@@ -1,0 +1,6 @@
+name: default
+# PROTOCOL.md §7: perceptual duplicates are grouped with a recorded pHash threshold.
+# pHash over the P0 full image, hash_size 8 -> 64 bits; two images are near-duplicates
+# when the Hamming distance between their hashes is <= phash_hamming_threshold.
+phash_hash_size: 8
+phash_hamming_threshold: 6

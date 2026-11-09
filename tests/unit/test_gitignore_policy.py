@@ -70,3 +70,10 @@ def test_public_manifest_json_is_not_ignored():
         finally:
             json_path.rename(path)
     assert not path.exists()
+
+
+def test_dedup_pair_panels_are_ignored_but_the_report_is_not():
+    with dummy_file("reports/dedup/pairs") as panel:
+        assert is_ignored(panel), "reports/dedup/pairs/ holds CompCars pixels"
+    with dummy_file("reports/dedup") as note:
+        assert not is_ignored(note), "reports/dedup/ text must be committable"

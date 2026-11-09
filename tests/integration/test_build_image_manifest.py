@@ -14,6 +14,7 @@ from pathlib import Path
 import pyarrow.parquet as pq
 import pytest
 
+from avr.data.dedup import deduplicate
 from avr.data.manifest import (
     PRIVATE_COLUMNS,
     PUBLIC_COLUMNS,
@@ -138,3 +139,16 @@ def test_byte_identical_files_get_distinct_ids_from_the_same_hash(synthetic_comp
     assert first.image_id == first.sha256[:16]
     assert second.image_id == first.sha256[:16] + "-1"
     assert len({row.image_id for row in rows.values()}) == 6
+
+
+def test_deduplicate_fills_phash_from_the_release_tree(synthetic_compcars: Path):
+    rows = build_manifest(synthetic_compcars, workers=2)
+
+    result = deduplicate(rows, synthetic_compcars, threshold=6, hash_size=8, workers=2)
+
+    assert [r.image_id for r in result.rows] == [r.image_id for r in rows]
+    assert all(len(r.phash) == 16 and int(r.phash, 16) >= 0 for r in result.rows)
+    # flat single-colour JPEGs all hash to the same pHash, so they form one group
+    assert {r.duplicate_group_id for r in result.rows} == {min(r.image_id for r in rows)}
+    assert result.stats.exact_duplicate_groups == 0
+    assert result.stats.near_duplicate_images == 5

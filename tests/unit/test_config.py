@@ -20,3 +20,10 @@ def test_tracking_group_points_at_the_local_file_store():
     assert cfg.tracking.backend == "local_file"
     assert cfg.tracking.tracking_dir == "mlruns"
     assert cfg.tracking.experiment_name == "avr"
+
+
+def test_dedup_group_records_the_phash_threshold():
+    cfg = load_config()
+
+    assert cfg.dedup.phash_hamming_threshold == 6
+    assert cfg.dedup.phash_hash_size == 8
