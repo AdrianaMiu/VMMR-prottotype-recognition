@@ -78,6 +78,7 @@ def main(argv: list[str]) -> dict:
         manifest_path=REPO_ROOT / "data" / "manifests" / f"{MANIFEST_NAME}.parquet",
         split_path=_resolve(str(exp.splits[track])),
         mapping_queue_path=_resolve(str(exp.mapping_queue)) if track == "track_b" else None,
+        mask_metadata_path=_resolve(str(exp.mask_metadata)) if variant == "p3" else None,
         output_dir=_resolve(str(exp.output_dir)),
         prototypes_dir=_resolve(str(exp.prototypes_dir)),
         qdrant_dir=_resolve(str(exp.qdrant_dir)),

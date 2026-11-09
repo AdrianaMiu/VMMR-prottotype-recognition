@@ -112,7 +112,8 @@ def _run_section(r: dict) -> list[str]:
     lines += [
         "",
         f"Embedding store: {store['rows']:,} rows in {store['shards']} shards, "
-        f"dimension {store['dimension']}. Result file: `{track}_{variant}.json`.",
+        f"dimension {store['dimension']}. Result file: `{track}_{variant}.json`. "
+        f"P3 mask metadata sha256: `{r.get('mask_metadata_sha256', 'not recorded')}`.",
         "",
     ]
     for name, ev in r["evaluations"].items():

@@ -21,7 +21,7 @@ Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and t
 
 Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
-Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`.
+Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`. P3 mask metadata sha256: `not recorded`.
 
 ### official_full
 
@@ -95,7 +95,7 @@ Run manifest `m1_gate_track_a_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957
 
 Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
-Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`.
+Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`. P3 mask metadata sha256: `not recorded`.
 
 ### official_full
 
@@ -169,7 +169,7 @@ Run manifest `m1_gate_track_a_p3_dinov3_vitb16` at commit `e2627197e1f4be645a957
 
 Split: `track_b_seed_73` (primary seed 73); classes are the provisional model-year stand-ins, every row `mapping_status = provisional`.
 
-Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_b_p1.json`.
+Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_b_p1.json`. P3 mask metadata sha256: `not recorded`.
 
 ### test
 
@@ -247,7 +247,7 @@ Run manifest `m1_gate_track_b_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957
 
 Split: `track_b_seed_73` (primary seed 73); classes are the provisional model-year stand-ins, every row `mapping_status = provisional`.
 
-Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_b_p3.json`.
+Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_b_p3.json`. P3 mask metadata sha256: `not recorded`.
 
 ### test
 

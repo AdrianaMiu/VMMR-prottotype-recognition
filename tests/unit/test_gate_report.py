@@ -29,6 +29,7 @@ def toy_results(track: str, variant: str) -> dict:
         "protocol_id": f"{track}_x",
         "split_label": "LABEL-A" if track == "track_a" else f"{track}_x",
         "mapping_status": "not_applicable" if track == "track_a" else "provisional",
+        "mask_metadata_sha256": "not_applicable" if variant == "p1" else "cd" * 32,
         "embedding_store": {"rows": 10, "shards": 1, "dimension": 2},
         "evaluations": {
             "official_full": {
@@ -95,6 +96,8 @@ def test_readme_carries_labels_tables_and_verdicts():
     assert "mapping_status = provisional" in text
     assert "| make_model | 4 | 0.5000 | 0.7500 | 1.0000 | 1.0000 | 0.6000 |" in text
     assert "byte-identical" in text and "yes" in text
+    assert "P3 mask metadata sha256: `not_applicable`" in text
+    assert f"P3 mask metadata sha256: `{'cd' * 32}`" in text
     assert "## PROTOCOL.md §25 M1 checklist" in text
     assert "reports/leakage/track_a.md" in text
     assert "## Not yet run" not in text

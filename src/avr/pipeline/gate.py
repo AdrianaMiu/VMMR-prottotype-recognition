@@ -80,6 +80,7 @@ class GateInputs(BaseModel):
     manifest_path: Path
     split_path: Path
     mapping_queue_path: Path | None
+    mask_metadata_path: Path | None = None
     output_dir: Path
     prototypes_dir: Path
     qdrant_dir: Path
@@ -128,6 +129,15 @@ def _read_checked(path: Path) -> tuple[pd.DataFrame, str]:
     if table.image_id.duplicated().any():
         raise ValueError(f"{path}: table lists an image id more than once")
     return table, digest
+
+
+def _mask_metadata_digest(inputs: GateInputs) -> str:
+    """Verified digest of the P3 mask metadata the store was built from; p1 has none."""
+    if inputs.variant != "p3":
+        return "not_applicable"
+    if inputs.mask_metadata_path is None:
+        raise ValueError("variant 'p3' needs mask_metadata_path (data/manifests/p3_mask_metadata)")
+    return _read_checked(inputs.mask_metadata_path)[1]
 
 
 def _load_store(inputs: GateInputs) -> tuple[EmbeddingStore, dict[str, int], np.ndarray]:
@@ -403,6 +413,7 @@ def run_track(inputs: GateInputs) -> GateResult:
     started = time.perf_counter()
     environment = capture_environment(REPO_ROOT)
     manifest, manifest_digest = _read_checked(inputs.manifest_path)
+    mask_metadata_digest = _mask_metadata_digest(inputs)
     split, split_digest = _read_checked(inputs.split_path)
     mapping_digest = (
         sha256_of_file(inputs.mapping_queue_path) if inputs.mapping_queue_path else "not_applicable"
@@ -522,6 +533,7 @@ def run_track(inputs: GateInputs) -> GateResult:
                 run.log_metric(f"{ev_name}/{level}/mrr", metrics["ranking"]["mrr"])
                 run.log_metric(f"{ev_name}/{level}/macro_f1", metrics["classification"]["macro_f1"])
                 run.log_metric(f"{ev_name}/{level}/accuracy", metrics["classification"]["accuracy"])
+        run.log_param("mask_metadata_sha256", mask_metadata_digest)
         run.log_metric("qdrant_parity_queries", parity["queries"])
 
     elapsed = time.perf_counter() - started
@@ -535,6 +547,7 @@ def run_track(inputs: GateInputs) -> GateResult:
         "split_label": TRACK_A_LABEL if inputs.track == "track_a" else inputs.protocol_id,
         "mapping_status": "not_applicable" if inputs.track == "track_a" else "provisional",
         "mapping_version": MAPPING_VERSION[inputs.track],
+        "mask_metadata_sha256": mask_metadata_digest,
         "embedding_store": {
             **identity.model_dump(),
             "directory": str(store.directory),
