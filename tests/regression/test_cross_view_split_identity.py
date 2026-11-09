@@ -75,4 +75,4 @@ def test_published_sidecars_cover_every_seed_and_held_out_view():
             counts = summary["partition_counts"][str(seed)][str(view)]
             assert counts["support"] > counts["test"] > 0
             assert counts["validation"] > 0
-            assert 0 < summary["class_counts"][str(seed)][str(view)] <= 2651
+            assert 0 < summary["class_counts"][str(seed)][str(view)] <= 2645

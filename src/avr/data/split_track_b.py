@@ -8,6 +8,11 @@ rule removes; the audit is computed and written before any class is dropped.
 No approved generation-mapping rows exist yet. With ``provisional_fallback`` on, the
 model-year class ``make_id/model_id/year`` stands in for ``generation_id`` and every
 output row is marked ``mapping_status = provisional``.
+
+Before eligibility, every image whose ``duplicate_group_id`` spans more than one class is
+excluded with reason ``cross_class_duplicate`` (ADR-0006): a group-aware split that assigns
+groups class by class could not keep such a group in one partition. The exclusion is
+counted in the audit before the eligibility rules.
 """
 
 from __future__ import annotations
@@ -76,8 +81,18 @@ class RuleOutcome(BaseModel):
     dropped_class_ids: list[str]
 
 
+class CrossClassExclusion(BaseModel):
+    """Images excluded before eligibility because their duplicate group spans classes."""
+
+    reason: Literal["cross_class_duplicate"] = "cross_class_duplicate"
+    groups: int = 0
+    images: int = 0
+    group_ids: list[str] = []
+
+
 class EligibilityAudit(BaseModel):
     thresholds: EligibilityThresholds
+    cross_class: CrossClassExclusion = CrossClassExclusion()
     classes_before: int
     images_before: int
     frequency_histogram: dict[str, int]
@@ -122,8 +137,16 @@ def frequency_histogram(classes: list[ClassStats]) -> dict[str, int]:
     }
 
 
-def audit_eligibility(classes: list[ClassStats], t: EligibilityThresholds) -> EligibilityAudit:
-    """Apply the rules in protocol order and record what each one removes; drops nothing."""
+def audit_eligibility(
+    classes: list[ClassStats],
+    t: EligibilityThresholds,
+    cross_class: CrossClassExclusion | None = None,
+) -> EligibilityAudit:
+    """Apply the rules in protocol order and record what each one removes; drops nothing.
+
+    ``classes`` are the stats of the pool after the cross-class exclusion, which
+    ``cross_class`` records; the counts before the first rule exclude those images.
+    """
     remaining = sorted(classes, key=lambda c: c.class_id)
     outcomes = []
     for rule in RULES:
@@ -143,6 +166,7 @@ def audit_eligibility(classes: list[ClassStats], t: EligibilityThresholds) -> El
         remaining = kept
     return EligibilityAudit(
         thresholds=t,
+        cross_class=cross_class or CrossClassExclusion(),
         classes_before=len(classes),
         images_before=sum(c.image_count for c in classes),
         frequency_histogram=frequency_histogram(classes),
@@ -170,16 +194,31 @@ def with_provisional_classes(manifest: pd.DataFrame) -> pd.DataFrame:
     return valid
 
 
-def class_stats_from_manifest(manifest: pd.DataFrame) -> list[ClassStats]:
-    """One ``ClassStats`` per provisional class, sorted by ``class_id``.
+def exclude_cross_class_duplicates(
+    valid: pd.DataFrame,
+) -> tuple[pd.DataFrame, CrossClassExclusion]:
+    """Drop every image whose ``duplicate_group_id`` holds more than one ``class_id``.
+
+    Returns the remaining rows and the count of groups and images removed (ADR-0006).
+    """
+    classes_per_group = valid.groupby("duplicate_group_id")["class_id"].nunique()
+    crossing = sorted(str(g) for g in classes_per_group.index[classes_per_group > 1])
+    in_crossing = valid["duplicate_group_id"].isin(crossing)
+    exclusion = CrossClassExclusion(
+        groups=len(crossing), images=int(in_crossing.sum()), group_ids=crossing
+    )
+    return valid[~in_crossing], exclusion
+
+
+def class_stats(pool: pd.DataFrame) -> list[ClassStats]:
+    """One ``ClassStats`` per provisional class of ``pool``, sorted by ``class_id``.
 
     ``deduplicated_count`` is the number of distinct duplicate groups, ``viewpoint_count``
     the number of distinct known viewpoints (``-1`` is uncertain and not counted) and
     ``query_eligible_count`` the number of valid images with a known viewpoint.
     """
-    valid = with_provisional_classes(manifest)
     classes = []
-    for class_id, rows in valid.groupby("class_id", sort=True):
+    for class_id, rows in pool.groupby("class_id", sort=True):
         known = rows[rows["viewpoint"].isin(KNOWN_VIEWPOINTS)]
         classes.append(
             ClassStats(
@@ -195,6 +234,12 @@ def class_stats_from_manifest(manifest: pd.DataFrame) -> list[ClassStats]:
             )
         )
     return classes
+
+
+def class_stats_from_manifest(manifest: pd.DataFrame) -> list[ClassStats]:
+    """``class_stats`` of the valid rows after the cross-class exclusion."""
+    pool, _ = exclude_cross_class_duplicates(with_provisional_classes(manifest))
+    return class_stats(pool)
 
 
 PARTITIONS: tuple[str, ...] = ("support", "validation", "test")
@@ -291,6 +336,9 @@ def write_eligibility_audit(audit: EligibilityAudit, path: Path) -> Path:
         "(no approved generation-mapping rows exist yet, so every output row carries",
         "`mapping_status = provisional`). Rules are applied in protocol order and a class is",
         "charged to the first rule it fails. This report is written before any class is dropped.",
+        "Before any rule, every image whose `duplicate_group_id` spans more than one class is",
+        "excluded with reason `cross_class_duplicate` (ADR-0006); the counts below start after",
+        "that exclusion.",
         "",
         "## Thresholds (configs/splits/track_b.yaml)",
         "",
@@ -299,6 +347,18 @@ def write_eligibility_audit(audit: EligibilityAudit, path: Path) -> Path:
         f"- min_query_eligible: {t.min_query_eligible} (valid images with a known viewpoint)",
         f"- require_approved_mapping: {str(t.require_approved_mapping).lower()}",
         f"- provisional_fallback: {str(t.provisional_fallback).lower()}",
+        "",
+        "## Excluded before eligibility (ADR-0006)",
+        "",
+        _table(
+            [
+                ["reason", "groups", "images"],
+                ["---"] * 3,
+                [audit.cross_class.reason, audit.cross_class.groups, audit.cross_class.images],
+            ]
+        ),
+        "",
+        "Groups: " + (", ".join(f"`{g}`" for g in audit.cross_class.group_ids) or "none") + ".",
         "",
         "## Class-frequency histogram before any rule (valid images per class)",
         "",
@@ -375,12 +435,12 @@ def build_track_b_splits(
     audit_path: Path,
     out_dir: Path,
 ) -> TrackBSplitResult:
-    """Audit eligibility, write the audit, then drop ineligible classes and split per seed."""
-    audit = audit_eligibility(class_stats_from_manifest(manifest), thresholds)
+    """Exclude cross-class groups, audit eligibility and write it, then split per seed."""
+    pool, cross_class = exclude_cross_class_duplicates(with_provisional_classes(manifest))
+    audit = audit_eligibility(class_stats(pool), thresholds, cross_class)
     write_eligibility_audit(audit, audit_path)
 
-    valid = with_provisional_classes(manifest)
-    eligible = valid[valid["class_id"].isin(audit.eligible_class_ids)]
+    eligible = pool[pool["class_id"].isin(audit.eligible_class_ids)]
     outputs, counts = {}, {}
     for seed in seeds:
         split = assign_partitions(eligible, seed=seed, fractions=fractions)
