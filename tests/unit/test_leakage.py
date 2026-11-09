@@ -16,9 +16,11 @@ from avr.data.leakage import (
     check_classes_have_support,
     check_labels_match,
     check_no_group_crosses,
+    check_partition_matches_parent,
     check_paths_resolve,
     check_regeneration,
     check_split_ids_in_manifest,
+    cross_view_findings,
     track_a_findings,
     track_b_findings,
 )
@@ -425,3 +427,58 @@ def test_track_b_findings_fail_on_a_test_class_without_support_and_on_a_crossing
     assert by_check["no_source_group_id_crosses_partition"].offending_ids == ["a1"]
     assert by_check["every_test_class_has_support"].offending_ids == ["2/2/2012"]
     assert all(f.must_pass for f in findings)
+
+
+# --- cross-view variants (ADR-0004) -----------------------------------------------------------
+
+
+def cross_view_fixture() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Parent seed table and its held-out-view-2 variant for one class with two views."""
+    parent = track_b_split(
+        ("a1", "1/1/2010", "support"),
+        ("a2", "1/1/2010", "support"),  # a1's duplicate, same partition: no crossing
+        ("a3", "1/1/2010", "support"),
+        ("a4", "1/1/2010", "test"),
+        ("b1", "1/1/2010", "test"),
+    )
+    parent["viewpoint"] = [1, 1, 2, 2, 1]
+    # held-out view 2: support keeps view 1 (a1, a2), test keeps view 2 (a4)
+    variant = parent[parent.image_id.isin(["a1", "a2", "a4"])].reset_index(drop=True)
+    return MANIFEST, parent, variant
+
+
+def test_cross_view_variant_that_only_filters_the_parent_passes():
+    manifest, parent, variant = cross_view_fixture()
+    findings = cross_view_findings(manifest, parent, variant)
+    assert [f.check for f in findings] == [
+        "split_ids_resolve_in_manifest",
+        "no_duplicate_group_id_crosses_partition",
+        "no_source_group_id_crosses_partition",
+        "every_test_class_has_support",
+        "partition_matches_parent_seed",
+    ]
+    assert all(f.passed for f in findings)
+    assert findings[-1].counts == {"variant_rows": 3, "not_in_parent": 0, "partition_differs": 0}
+
+
+def test_planted_partition_change_against_the_parent_fails():
+    manifest, parent, variant = cross_view_fixture()
+    variant.loc[variant.image_id == "a2", "partition"] = "test"  # re-assigned, not filtered
+
+    finding = check_partition_matches_parent(variant, parent)
+
+    assert not finding.passed
+    assert finding.counts == {"variant_rows": 3, "not_in_parent": 0, "partition_differs": 1}
+    assert finding.offending_ids == ["a2"]
+
+
+def test_variant_row_absent_from_the_parent_fails():
+    manifest, parent, variant = cross_view_fixture()
+    extra = variant.iloc[[0]].assign(image_id="zz", sha256="hz")
+    variant = pd.concat([variant, extra], ignore_index=True)
+
+    finding = check_partition_matches_parent(variant, parent)
+
+    assert not finding.passed
+    assert finding.counts["not_in_parent"] == 1
+    assert finding.offending_ids == ["zz"]

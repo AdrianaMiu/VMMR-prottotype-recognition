@@ -326,6 +326,35 @@ def track_b_findings(manifest: pd.DataFrame, split: pd.DataFrame) -> list[Findin
     return findings
 
 
+def check_partition_matches_parent(variant: pd.DataFrame, parent: pd.DataFrame) -> Finding:
+    """Every variant row keeps the partition its ``image_id`` has in the parent seed table.
+
+    A cross-view variant filters the parent split and never re-assigns a row (ADR-0004), so
+    a row absent from the parent or carrying another partition is a leak of the parent's
+    group-aware guarantees.
+    """
+    joined = variant[["image_id", "partition"]].merge(
+        parent[["image_id", "partition"]], on="image_id", how="left", suffixes=("", "_parent")
+    )
+    missing = joined["partition_parent"].isna()
+    differs = ~missing & (joined["partition"] != joined["partition_parent"])
+    counts = {
+        "variant_rows": int(len(variant)),
+        "not_in_parent": int(missing.sum()),
+        "partition_differs": int(differs.sum()),
+    }
+    return _finding(
+        "partition_matches_parent_seed", counts, list(joined.image_id[missing | differs])
+    )
+
+
+def cross_view_findings(
+    manifest: pd.DataFrame, parent: pd.DataFrame, variant: pd.DataFrame
+) -> list[Finding]:
+    """Checks on one cross-view variant table: the Track B checks plus parent agreement."""
+    return [*track_b_findings(manifest, variant), check_partition_matches_parent(variant, parent)]
+
+
 def e0_fixture_findings(fixture_dir: Path) -> tuple[list[Finding], dict[str, str]]:
     """Checks on ``tests/fixtures/e0_10class``: ``split.json`` against ``manifest_slice``.
 
