@@ -5,14 +5,14 @@ Data); do not edit by hand. A check marked must-pass fails the audit; a finding
 that is not must-pass is reported only. Offending identifiers are capped at
 50.
 
-Verdict: **FAIL**
+Verdict: **PASS**
 
 ## Inputs
 
 - manifest: `data/manifests/compcars_web_images.parquet`
 - manifest sha256: `24a158622d01d7df4ec699b54c1469524436846ed715b0886ccb4a95936bd532`
 - split: `data/splits/track_b/seed_101.parquet`
-- split sha256: `d7112b495b650a6a2c34e7fdd73cb99142ed02c9411c90159dd3b41f548b971b`
+- split sha256: `4813c8dec83383d273e93447d417fa34d5476b898413c25635b3ba9c35899845`
 
 ## Checks
 
@@ -20,26 +20,14 @@ Verdict: **FAIL**
 |-------|-----------|--------|--------|
 | manifest_paths_resolve | yes | passed | manifest_rows=136726, unresolved=0, missing_files=0 |
 | labels_match_compcars_metadata | yes | passed | manifest_rows=136726, mismatched=0 |
-| split_ids_resolve_in_manifest | yes | passed | split_rows=118586, unresolved=0, sha256_mismatch=0 |
-| no_duplicate_group_id_crosses_partition | yes | failed | groups=117729, crossing_groups=100, crossing_images=201, crossing_groups_multi_class=100 |
-| no_source_group_id_crosses_partition | yes | failed | groups=117729, crossing_groups=100, crossing_images=201, crossing_groups_multi_class=100 |
-| every_test_class_has_support | yes | passed | target_classes=2651, classes_without_support=0 |
+| split_ids_resolve_in_manifest | yes | passed | split_rows=118070, unresolved=0, sha256_mismatch=0 |
+| no_duplicate_group_id_crosses_partition | yes | passed | groups=117397, crossing_groups=0, crossing_images=0, crossing_groups_multi_class=0 |
+| no_source_group_id_crosses_partition | yes | passed | groups=117397, crossing_groups=0, crossing_images=0, crossing_groups_multi_class=0 |
+| every_test_class_has_support | yes | passed | target_classes=2645, classes_without_support=0 |
 | regeneration_byte_identical | yes | passed | compared=1, mismatched=0 |
 
 ## Details
 
-### no_duplicate_group_id_crosses_partition
-
-Offending ids (50 shown):
-
-`0015295a3001c0c0`, `0017d5425c9828f0`, `011fbb71c24ef23a`, `01d2e5147925e7b1`, `020f38757d3c9f08`, `0386d3375bf81005`, `03c21d6ef0b52f8f`, `0548670b6cd24ef5`, `05bf5821df3352d0`, `08dc5fdf65eab4a3`, `0958f1502e146876`, `09e919a47727b2d6`, `0c25613efb5f9213`, `12cd908acf3315ff`, `175c6c9f93079b09`, `184477f82330afdc`, `18bffb7d33ac5923`, `18e831d92c07cceb`, `1bd350577d03ae35`, `1e647151b9c36484`, `21095e90bba5eb08`, `21098742556f84c9`, `23acb0cad4bbc76f`, `240ac6900b9c14f7`, `26ab2790676ac2ff`, `2828975cc5de0fa1`, `28601328b3a9f8ce`, `28b773752fcd16ab`, `28c1bf091df3434e`, `2b5c21cc8ef550ec`, `2c9b82afdffcaf92`, `2efd0dfb59aa92ac`, `2f993e26bc96c870`, `31a0fadc40a9eb89`, `335fc52ae441dc97`, `39e14a51e22af27b`, `3d748983ead87eff`, `3f00593f147fae71`, `45cfe9b2be438bbb`, `46d9c7c5897577a6`, `47a442b56c6f113b`, `484ffcccc83533a6`, `4998701583e1aa74`, `4a5569300f76b17e`, `4e86cc5873617310`, `5251d4ecc447fe31`, `5317d9d01c0c3b73`, `53ecea99992b45a7`, `59291861152846f1`, `5ae2d9d8156bcc20`
-
-### no_source_group_id_crosses_partition
-
-Offending ids (50 shown):
-
-`0015295a3001c0c0`, `0017d5425c9828f0`, `011fbb71c24ef23a`, `01d2e5147925e7b1`, `020f38757d3c9f08`, `0386d3375bf81005`, `03c21d6ef0b52f8f`, `0548670b6cd24ef5`, `05bf5821df3352d0`, `08dc5fdf65eab4a3`, `0958f1502e146876`, `09e919a47727b2d6`, `0c25613efb5f9213`, `12cd908acf3315ff`, `175c6c9f93079b09`, `184477f82330afdc`, `18bffb7d33ac5923`, `18e831d92c07cceb`, `1bd350577d03ae35`, `1e647151b9c36484`, `21095e90bba5eb08`, `21098742556f84c9`, `23acb0cad4bbc76f`, `240ac6900b9c14f7`, `26ab2790676ac2ff`, `2828975cc5de0fa1`, `28601328b3a9f8ce`, `28b773752fcd16ab`, `28c1bf091df3434e`, `2b5c21cc8ef550ec`, `2c9b82afdffcaf92`, `2efd0dfb59aa92ac`, `2f993e26bc96c870`, `31a0fadc40a9eb89`, `335fc52ae441dc97`, `39e14a51e22af27b`, `3d748983ead87eff`, `3f00593f147fae71`, `45cfe9b2be438bbb`, `46d9c7c5897577a6`, `47a442b56c6f113b`, `484ffcccc83533a6`, `4998701583e1aa74`, `4a5569300f76b17e`, `4e86cc5873617310`, `5251d4ecc447fe31`, `5317d9d01c0c3b73`, `53ecea99992b45a7`, `59291861152846f1`, `5ae2d9d8156bcc20`
-
 ### regeneration_byte_identical
 
-rebuilt d7112b495b650a6a2c34e7fdd73cb99142ed02c9411c90159dd3b41f548b971b, published d7112b495b650a6a2c34e7fdd73cb99142ed02c9411c90159dd3b41f548b971b
+rebuilt 4813c8dec83383d273e93447d417fa34d5476b898413c25635b3ba9c35899845, published 4813c8dec83383d273e93447d417fa34d5476b898413c25635b3ba9c35899845
