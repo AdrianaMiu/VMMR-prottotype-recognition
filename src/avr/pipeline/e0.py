@@ -23,13 +23,18 @@ from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
+from PIL import Image
 from pydantic import BaseModel, ConfigDict
 
 from avr.data.manifest import PUBLIC_COLUMNS, PUBLIC_SCHEMA
+from avr.encoders.extract import Embedder
 from avr.encoders.store import StoreIdentity, embedding_table, read_embedding_table
 from avr.evaluation.classification import ClassificationMetrics, classification_metrics
 from avr.evaluation.ranking import RankingMetrics, ranking_metrics
+from avr.preprocessing.p3_batch import load_jobs
+from avr.preprocessing.variants import prepare
 from avr.prototypes.m0 import build_global_mean_prototypes
 from avr.retrieval.exact import rank_by_cosine, rank_by_cosine_faiss
 from avr.tracking.manifest import RunManifest, capture_environment
@@ -123,6 +128,7 @@ SLICE_NAME = "manifest_slice.parquet"
 EMBEDDINGS_NAME = "embeddings.parquet"
 SPLIT_NAME = "split.json"
 EXPECTED_NAME = "expected_metrics.json"
+README_NAME = "README.md"
 SELECTION_RULE = (
     "fixture-only split, not the Track A official split: the classes with the most valid "
     "images, then per class a shuffle of the sorted image ids with numpy default_rng(seed), "
@@ -335,4 +341,112 @@ def run_e0(fixture_dir: Path, tracking_dir: Path | None = None) -> dict[str, flo
         with tracked_run(manifest, tracking_dir=tracking_dir) as run:
             for name, value in metrics.items():
                 run.log_metric(name, float(value))
+    return metrics
+
+
+# --- building the committed fixture ----------------------------------------------------
+
+
+def _readme(
+    split: FixtureSplitFile, metrics: Mapping[str, float], n_support: int, n_query: int
+) -> str:
+    identity = split.embedding_identity
+    lines = [
+        "# E0 ten-class fixture",
+        "",
+        'Frozen inputs for the E0 pipeline validation (PROTOCOL.md §14 "Stage E0"):',
+        f"{len(split.class_ids)} make-model classes, {n_support} support and {n_query} query "
+        "images per class, with their P1 embeddings. `avr.pipeline.e0.run_e0` replays manifest "
+        "validation, M0 prototypes, exact search, ranking and classification metrics and the run "
+        "manifest on CPU; `tests/integration/test_e0_fixture.py` asserts every metric equals "
+        "`expected_metrics.json`.",
+        "",
+        "## This is a fixture split, not the Track A official split",
+        "",
+        "The Track A split (issue #9) was not available when the fixture was built. Classes and "
+        "images were chosen by the rule in `split.json` (`rule`): " + split.rule + ".",
+        f"Seed: {split.seed}. No duplicate group spans support and query.",
+        "",
+        "## Files",
+        "",
+        f"- `{SLICE_NAME}`: public manifest columns only (no paths) for the fixture images; "
+        f"sha256 `{split.manifest_slice_sha256}`.",
+        f"- `{EMBEDDINGS_NAME}`: `image_id` and L2-normalised float32 `embedding` rows.",
+        f"- `{SPLIT_NAME}`: support/query image ids per class, selection rule, checksums and "
+        "the embedding identity.",
+        f"- `{EXPECTED_NAME}`: the metric values recorded when the fixture was built.",
+        "",
+        "## Provenance",
+        "",
+        f"- encoder: {identity.encoder} (revision {identity.revision}, checkpoint sha256 "
+        f"{identity.checkpoint_sha256})",
+        f"- preprocessing: {identity.preprocessing_id}, variant {identity.variant}, compute dtype "
+        f"{identity.dtype}",
+        f"- source manifest sha256: {split.source_manifest_sha256}",
+        f"- built at commit {split.git_commit} by `scripts/build_e0_fixture.py`",
+        "",
+        "## Classes",
+        "",
+    ]
+    lines += [f"- {class_id}" for class_id in split.class_ids]
+    lines += ["", "## Recorded metrics", ""]
+    lines += [f"- {name}: {value}" for name, value in metrics.items()]
+    return "\n".join(lines) + "\n"
+
+
+def build_fixture(
+    fixture_dir: Path,
+    manifest_path: Path,
+    paths_path: Path,
+    root: Path,
+    embedder: Embedder,
+    identity: StoreIdentity,
+    git_commit: str,
+    n_classes: int = FIXTURE_CLASSES,
+    n_support: int = FIXTURE_SUPPORT,
+    n_query: int = FIXTURE_QUERY,
+    seed: int = FIXTURE_SEED,
+    batch_size: int = 32,
+    expand: float = 0.05,
+    tracking_dir: Path | None = None,
+) -> dict[str, float]:
+    """Select the split, embed its P1 crops, write the fixture and record its metrics.
+
+    ``embedder`` is any object with ``embed(images) -> [n, dim]`` (a loaded
+    :class:`avr.encoders.adapter.FrozenEncoder` in the build script); this module never
+    imports torch. The returned metrics are also written to ``expected_metrics.json``.
+    """
+    fixture_dir = Path(fixture_dir)
+    manifest = pq.read_table(manifest_path)
+    split = select_fixture_split(
+        manifest.to_pylist(), n_classes=n_classes, n_support=n_support, n_query=n_query, seed=seed
+    )
+    wanted = set(split.support_ids + split.query_ids)
+    manifest_slice = manifest.filter(pc.is_in(manifest["image_id"], pa.array(sorted(wanted))))
+    jobs = [j for j in load_jobs(manifest_path, paths_path) if j.image_id in wanted]
+    if len(jobs) != len(wanted):
+        raise ValueError(f"{len(wanted) - len(jobs)} fixture image(s) have no path table entry")
+
+    blocks = []
+    for start in range(0, len(jobs), batch_size):
+        crops = []
+        for job in jobs[start : start + batch_size]:
+            with Image.open(Path(root) / job.relative_path) as image:
+                crops.append(prepare(image.convert("RGB"), job.bbox_xyxy, "p1", expand=expand))
+        blocks.append(embedder.embed(crops))
+
+    write_fixture(
+        fixture_dir,
+        manifest_slice=manifest_slice.select(list(PUBLIC_COLUMNS)),
+        image_ids=[j.image_id for j in jobs],
+        embeddings=np.vstack(blocks),
+        split=split,
+        identity=identity,
+        source_manifest_sha256=_sha256(Path(manifest_path)),
+        git_commit=git_commit,
+    )
+    metrics = run_e0(fixture_dir, tracking_dir=tracking_dir)
+    (fixture_dir / EXPECTED_NAME).write_text(json.dumps(metrics, indent=2) + "\n")
+    split_file = FixtureSplitFile.model_validate_json((fixture_dir / SPLIT_NAME).read_text())
+    (fixture_dir / README_NAME).write_text(_readme(split_file, metrics, n_support, n_query))
     return metrics
