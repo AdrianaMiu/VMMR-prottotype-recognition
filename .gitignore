@@ -32,5 +32,8 @@ outputs/
 !/.dvc/
 /*-lock.json
 
+# dedup audit panels are CompCars pixels; the pair list is committed as CSV instead
+reports/dedup/pairs/
+
 # derived embeddings (resumable per-shard store, PROTOCOL.md §9)
 data/embeddings/

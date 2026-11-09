@@ -8,6 +8,7 @@ defaults:
   - experiments@experiment: e0_pipeline_validation
   - extraction@extraction: embeddings
   - tracking@tracking: local
+  - dedup@dedup: default
   - _self_
 
 seed: 73
