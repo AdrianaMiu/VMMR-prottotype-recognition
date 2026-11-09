@@ -310,3 +310,13 @@ def test_exact_backend_is_selectable_and_agrees_with_qdrant(service):
             [p["cosine_similarity"] for p in ve["predictions"]],
             atol=1e-5,
         )
+
+
+def test_server_backend_targets_the_configured_url_without_connecting(service):
+    _, resources = service([], search_backend="qdrant_server", qdrant_url="http://qdrant:6333")
+    resources.reload_indexes()
+
+    backend = resources.backends[PROFILE]
+    assert backend.target.url == "http://qdrant:6333"
+    assert backend.exact is True
+    assert resources.indexes_response().search_backend == "qdrant_server"

@@ -4,7 +4,9 @@ Paths default to the repository layout (``configs/service/profiles.yaml``, ``dat
 ``data/qdrant``); a deployment points them elsewhere with ``AVR_PROTOTYPES_DIR`` and friends.
 ``return_embeddings`` stays disabled unless ``AVR_ALLOW_EMBEDDINGS=true`` (a development
 flag, never set in a public deployment) and ``POST /v1/indexes/reload`` is disabled until
-``AVR_RELOAD_TOKEN`` is set.
+``AVR_RELOAD_TOKEN`` is set. ``search_backend`` picks exact in-memory search, the embedded
+Qdrant store (default today) or the Qdrant server of ``docker/docker-compose.yml``
+(``AVR_SEARCH_BACKEND=qdrant_server`` with ``AVR_QDRANT_URL``), always exact search.
 """
 
 from __future__ import annotations
@@ -20,7 +22,7 @@ from avr.encoders.registry import ENCODERS_DIR
 from avr.service.profiles import PROFILES_PATH
 
 REPO_ROOT = CONFIG_DIR.parent
-SearchBackendName = Literal["exact", "qdrant_embedded"]
+SearchBackendName = Literal["exact", "qdrant_embedded", "qdrant_server"]
 
 
 class ServiceSettings(BaseSettings):
@@ -31,6 +33,10 @@ class ServiceSettings(BaseSettings):
     qdrant_dir: Path = REPO_ROOT / "data" / "qdrant"
     encoders_dir: Path = ENCODERS_DIR
     search_backend: SearchBackendName = "qdrant_embedded"
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str | None = None
+    qdrant_timeout_s: int = Field(default=30, ge=1)
+    qdrant_exact: bool = True
     device: str | None = None
     reload_token: str | None = None
     allow_embeddings: bool = False

@@ -22,6 +22,7 @@ from PIL import Image, UnidentifiedImageError
 
 import avr
 from avr.encoders.registry import EncoderSpec
+from avr.retrieval.qdrant_store import LocalTarget, QdrantTarget, ServerTarget
 from avr.segmentation.base import Segmenter
 from avr.service.pipeline import Embedder, RecognitionPipeline
 from avr.service.profiles import Profile, ProfileRegistry, load_profiles
@@ -32,7 +33,7 @@ from avr.service.schemas import (
     ProfilesResponse,
     RecognizeResponse,
 )
-from avr.service.search import EmbeddedQdrantSearch, ExactSearch, SearchBackend
+from avr.service.search import ExactSearch, QdrantSearch, SearchBackend
 from avr.service.settings import ServiceSettings
 
 log = logging.getLogger("avr.service")
@@ -108,12 +109,19 @@ class ServiceResources:
         return profiles
 
     def _backend(self, profile: Profile) -> SearchBackend:
-        if self.settings.search_backend == "exact":
+        s = self.settings
+        if s.search_backend == "exact":
             return ExactSearch.from_parquet(profile.prototype_path)
-        backend = EmbeddedQdrantSearch(
-            Path(self.settings.qdrant_dir), profile.collection, client=self._qdrant_client
+        if s.search_backend == "qdrant_server":
+            target: QdrantTarget = ServerTarget(
+                url=s.qdrant_url, api_key=s.qdrant_api_key, timeout_s=s.qdrant_timeout_s
+            )
+        else:
+            target = LocalTarget(path=Path(s.qdrant_dir))
+        backend = QdrantSearch(
+            target, profile.collection, client=self._qdrant_client, exact=s.qdrant_exact
         )
-        self._qdrant_client = backend.client  # one embedded client per process, shared
+        self._qdrant_client = backend.client  # one client per process, shared by the profiles
         return backend
 
     def close(self) -> None:

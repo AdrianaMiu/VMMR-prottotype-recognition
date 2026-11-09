@@ -7,9 +7,10 @@ hierarchy payload with native types (``year`` as ``int``). Two implementations e
 * :class:`ExactSearch`: the §12 exact cosine ranking (``avr.retrieval.exact``) over the
   prototype table held in memory; the reference every other backend must match;
 * :class:`EmbeddedQdrantSearch`: the embedded local Qdrant store written by the M1 gate
-  (``avr.retrieval.qdrant_store``), exact by construction in embedded mode.
+  (``avr.retrieval.qdrant_store``), exact by construction in embedded mode;
 
-A Qdrant server backend (``url`` mode) plugs in through the same protocol.
+* :class:`QdrantSearch` on a :class:`~avr.retrieval.qdrant_store.ServerTarget`: the Qdrant
+  server of ``docker/docker-compose.yml`` (M5-1), queried with exact search.
 """
 
 from __future__ import annotations
@@ -23,7 +24,9 @@ import numpy as np
 import pyarrow as pa
 
 from avr.prototypes.persist import PAYLOAD_COLUMNS, read_prototype_table
+from avr.retrieval import qdrant_store
 from avr.retrieval.exact import rank_by_cosine
+from avr.retrieval.qdrant_store import LocalTarget, QdrantTarget, resolve_target
 
 INT_PAYLOAD_FIELDS = frozenset({"make_id", "model_id", "year", "support_count", "dimension"})
 
@@ -87,25 +90,27 @@ class ExactSearch:
         ]
 
 
-class EmbeddedQdrantSearch:
-    """Top-k from an embedded local Qdrant collection, exact in embedded mode.
+class QdrantSearch:
+    """Top-k from a Qdrant collection, embedded local store or server (``qdrant_store``).
 
-    The embedded store admits one client per process, and opening one loads the collection
-    from disk (hundreds of milliseconds), so the client is opened once and kept; several
-    backends on the same store share it through ``client``. ``close`` releases the directory.
+    The client is opened once and kept: an embedded store admits one client per process and
+    opening one loads the collection from disk (hundreds of milliseconds), and a server
+    connection is reusable. Several backends on the same target share it through ``client``;
+    ``close`` releases it. ``exact=True`` asks a server for exact search (§12 default).
     """
 
-    def __init__(self, path: Path, collection: str, client=None) -> None:
-        self.path = Path(path)
+    def __init__(
+        self, target: QdrantTarget | Path | str, collection: str, client=None, exact: bool = True
+    ) -> None:
+        self.target = resolve_target(target)
         self.collection = collection
+        self.exact = bool(exact)
         self._client = client
 
     @property
     def client(self):
         if self._client is None:
-            from qdrant_client import QdrantClient
-
-            self._client = QdrantClient(path=str(self.path))
+            self._client = qdrant_store._client(self.target)
         return self._client
 
     def close(self) -> None:
@@ -120,7 +125,13 @@ class EmbeddedQdrantSearch:
         if queries.shape[0] == 0:
             return []
         requests = [
-            models.QueryRequest(query=q.tolist(), limit=int(k), with_payload=True) for q in queries
+            models.QueryRequest(
+                query=q.tolist(),
+                limit=int(k),
+                with_payload=True,
+                params=models.SearchParams(exact=self.exact),
+            )
+            for q in queries
         ]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
@@ -129,3 +140,11 @@ class EmbeddedQdrantSearch:
             [Hit(p.payload["class_id"], float(p.score), _native(p.payload)) for p in r.points]
             for r in responses
         ]
+
+
+class EmbeddedQdrantSearch(QdrantSearch):
+    """``QdrantSearch`` on the embedded local store written by the M1 gate."""
+
+    def __init__(self, path: Path, collection: str, client=None) -> None:
+        super().__init__(LocalTarget(path=Path(path)), collection, client=client)
+        self.path = Path(path)
