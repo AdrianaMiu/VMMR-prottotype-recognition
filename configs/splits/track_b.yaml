@@ -1,0 +1,16 @@
+# PROTOCOL.md §5 Track B: class eligibility thresholds and the group-aware split.
+# Changing a threshold needs a new protocol version; the audit must be reported first.
+min_images: 20            # valid images after deduplication (distinct duplicate groups)
+min_viewpoints: 2         # distinct known CompCars viewpoints (1..5; -1 "uncertain" not counted)
+min_query_eligible: 5     # valid images with a known viewpoint
+require_approved_mapping: true
+# No approved generation-mapping rows exist yet. With the fallback on, the model-year
+# class make_id/model_id/year stands in for generation_id and every output row is
+# marked mapping_status = provisional. Turn it off once the approved mapping lands.
+provisional_fallback: true
+fractions:
+  support: 0.6
+  validation: 0.2
+  test: 0.2
+primary_seed: 73
+sensitivity_seeds: [13, 37, 101, 137]

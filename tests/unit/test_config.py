@@ -27,3 +27,18 @@ def test_dedup_group_records_the_phash_threshold():
 
     assert cfg.dedup.phash_hamming_threshold == 2  # ADR-0005
     assert cfg.dedup.phash_hash_size == 8
+
+
+def test_track_b_split_group_records_the_protocol_eligibility_thresholds():
+    cfg = load_config()
+
+    # PROTOCOL.md §5 Track B: >= 20 valid images, >= 2 viewpoints, >= 5 query-eligible,
+    # approved mapping; no approved rows exist yet, so the provisional fallback is on.
+    assert cfg.split_track_b.min_images == 20
+    assert cfg.split_track_b.min_viewpoints == 2
+    assert cfg.split_track_b.min_query_eligible == 5
+    assert cfg.split_track_b.require_approved_mapping is True
+    assert cfg.split_track_b.provisional_fallback is True
+    assert cfg.split_track_b.primary_seed == 73
+    assert list(cfg.split_track_b.sensitivity_seeds) == [13, 37, 101, 137]
+    assert dict(cfg.split_track_b.fractions) == {"support": 0.6, "validation": 0.2, "test": 0.2}

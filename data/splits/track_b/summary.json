@@ -1,0 +1,32 @@
+{
+  "manifest_sha256": "24a158622d01d7df4ec699b54c1469524436846ed715b0886ccb4a95936bd532",
+  "eligible_classes": 2651,
+  "eligible_images": 118586,
+  "partition_counts": {
+    "73": {
+      "support": 71197,
+      "validation": 24002,
+      "test": 23387
+    },
+    "13": {
+      "support": 71184,
+      "validation": 23999,
+      "test": 23403
+    },
+    "37": {
+      "support": 71167,
+      "validation": 23992,
+      "test": 23427
+    },
+    "101": {
+      "support": 71176,
+      "validation": 24022,
+      "test": 23388
+    },
+    "137": {
+      "support": 71177,
+      "validation": 24010,
+      "test": 23399
+    }
+  }
+}
