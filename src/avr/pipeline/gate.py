@@ -113,7 +113,11 @@ def _sha256_array(array: np.ndarray) -> str:
 
 
 def _read_checked(path: Path) -> tuple[pd.DataFrame, str]:
-    """A Parquet table whose ``.sha256`` sidecar must match (fail closed, never silently)."""
+    """A Parquet table whose ``.sha256`` sidecar must match (fail closed, never silently).
+
+    Used for the image manifest, the split table and the P3 mask metadata alike; every
+    one of them lists each ``image_id`` at most once.
+    """
     digest = sha256_of_file(path)
     sidecar = path.with_suffix(".sha256")
     if not sidecar.exists():
@@ -122,7 +126,7 @@ def _read_checked(path: Path) -> tuple[pd.DataFrame, str]:
         raise ValueError(f"{path}: sha256 {digest} differs from the sidecar {sidecar.name}")
     table = pd.read_parquet(path)
     if table.image_id.duplicated().any():
-        raise ValueError(f"{path}: split table lists an image id more than once")
+        raise ValueError(f"{path}: table lists an image id more than once")
     return table, digest
 
 
@@ -398,8 +402,7 @@ def _parity(
 def run_track(inputs: GateInputs) -> GateResult:
     started = time.perf_counter()
     environment = capture_environment(REPO_ROOT)
-    manifest_digest = sha256_of_file(inputs.manifest_path)
-    manifest = pd.read_parquet(inputs.manifest_path)
+    manifest, manifest_digest = _read_checked(inputs.manifest_path)
     split, split_digest = _read_checked(inputs.split_path)
     mapping_digest = (
         sha256_of_file(inputs.mapping_queue_path) if inputs.mapping_queue_path else "not_applicable"

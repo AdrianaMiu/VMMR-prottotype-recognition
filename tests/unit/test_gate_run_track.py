@@ -22,6 +22,7 @@ from avr.data.split_track_a import PUBLIC_SCHEMA as TRACK_A_SCHEMA
 from avr.data.split_track_b import OUTPUT_SCHEMA as TRACK_B_SCHEMA
 from avr.data.splits_io import write_split_manifest
 from avr.encoders.store import EmbeddingStore, StoreIdentity
+from avr.io import write_sha256_sidecar
 from avr.pipeline.gate import GateInputs, run_track
 from avr.prototypes.persist import read_prototype_table
 
@@ -105,6 +106,7 @@ def track_a(common: dict) -> GateInputs:
     rows[-2]["exclusion_reason"] = "degenerate_bbox"
     manifest = tmp / "manifest.parquet"
     pq.write_table(pa.Table.from_pylist(rows, schema=PUBLIC_SCHEMA), manifest)
+    write_sha256_sidecar(manifest)
 
     def split_row(image_id: str, make: int, model: int, side: str, part: str | None) -> dict:
         return {
@@ -272,6 +274,18 @@ def test_tampered_split_sidecar_is_rejected(track_a: GateInputs):
         run_track(track_a)
 
 
+def test_tampered_manifest_sidecar_is_rejected(track_a: GateInputs):
+    track_a.manifest_path.with_suffix(".sha256").write_text("0" * 64 + "  x\n")
+    with pytest.raises(ValueError, match="sha256"):
+        run_track(track_a)
+
+
+def test_manifest_without_sidecar_is_rejected(track_a: GateInputs):
+    track_a.manifest_path.with_suffix(".sha256").unlink()
+    with pytest.raises(ValueError, match="sidecar"):
+        run_track(track_a)
+
+
 # --- Track B ---------------------------------------------------------------------------
 
 
@@ -293,6 +307,7 @@ def track_b(common: dict) -> GateInputs:
     ]
     manifest = tmp / "manifest.parquet"
     pq.write_table(pa.Table.from_pylist(rows, schema=PUBLIC_SCHEMA), manifest)
+    write_sha256_sidecar(manifest)
 
     def split_row(image_id: str, cls: str, make: int, model: int, part: str, view: int = 1):
         return {
