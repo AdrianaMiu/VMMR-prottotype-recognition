@@ -1,0 +1,12 @@
+# Embedding extraction (scripts/extract_embeddings.py, PROTOCOL.md §9). Paths are relative
+# to the repository root unless absolute. `masks_dir` may point at another checkout's mask
+# store (read only); `limit` null means every valid manifest image.
+name: embeddings
+variant: p1                 # p1 | p3 (avr.preprocessing.variants)
+batch_size: 32
+shard_size: 1000
+limit: null
+device: null                # null: cuda if available, else cpu
+embeddings_dir: data/embeddings
+masks_dir: data/masks
+mask_metadata: data/manifests/p3_mask_metadata.parquet
