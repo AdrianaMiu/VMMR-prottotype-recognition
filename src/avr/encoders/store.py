@@ -11,7 +11,6 @@ is ``data/embeddings/`` by default and git-ignored.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from collections.abc import Sequence
@@ -24,6 +23,7 @@ import pyarrow.parquet as pq
 from pydantic import BaseModel, ConfigDict
 
 from avr.config import CONFIG_DIR
+from avr.io import read_fixed_list_matrix, sha256_of_file
 
 DEFAULT_ROOT = CONFIG_DIR.parent / "data" / "embeddings"
 _SHARD_RE = re.compile(r"^shard_(\d{5})\.parquet$")
@@ -67,11 +67,7 @@ def embedding_table(image_ids: Sequence[str], embeddings: np.ndarray) -> pa.Tabl
 def read_embedding_table(path: Path) -> tuple[list[str], np.ndarray]:
     """Read a table written by :func:`embedding_table` as ``(image_ids, [n, dim] float32)``."""
     table = pq.read_table(path)
-    ids = table.column("image_id").to_pylist()
-    column = table.column("embedding").combine_chunks()
-    dim = column.type.list_size
-    matrix = np.asarray(column.values.to_numpy(zero_copy_only=False), dtype=np.float32)
-    return ids, matrix.reshape(len(ids), dim)
+    return table.column("image_id").to_pylist(), read_fixed_list_matrix(table, "embedding")
 
 
 class EmbeddingStore:
@@ -154,7 +150,7 @@ class EmbeddingStore:
             shard_index=index,
             row_count=len(image_ids),
             dim=dim,
-            shard_sha256=hashlib.sha256(parquet.read_bytes()).hexdigest(),
+            shard_sha256=sha256_of_file(parquet),
             written_at=datetime.now(UTC).replace(microsecond=0),
         )
         manifest_tmp = self.shard_manifest_path(index).with_suffix(".json.tmp")

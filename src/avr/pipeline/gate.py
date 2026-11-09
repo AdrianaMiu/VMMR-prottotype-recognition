@@ -37,11 +37,11 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from avr.data.splits_io import read_sidecar_sha256
 from avr.encoders.store import EmbeddingStore
 from avr.evaluation.classification import ClassificationMetrics, classification_metrics
 from avr.evaluation.hierarchy import error_decomposition, parent_ranking_metrics
 from avr.evaluation.ranking import RankingMetrics, ranking_metrics
+from avr.io import read_sidecar_sha256, sha256_of_file
 from avr.pipeline.e0 import PROTOTYPE_METHOD, class_id_of
 from avr.prototypes.m0 import build_global_mean_prototypes
 from avr.prototypes.persist import (
@@ -112,17 +112,13 @@ class GateResult:
 # --- loading -----------------------------------------------------------------------------
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _sha256_array(array: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
 
 
 def _read_checked(path: Path) -> tuple[pd.DataFrame, str]:
     """A Parquet table whose ``.sha256`` sidecar must match (fail closed, never silently)."""
-    digest = _sha256(path)
+    digest = sha256_of_file(path)
     sidecar = path.with_suffix(".sha256")
     if not sidecar.exists():
         raise ValueError(f"{path}: no .sha256 sidecar")
@@ -406,11 +402,11 @@ def _parity(
 def run_track(inputs: GateInputs) -> GateResult:
     started = time.perf_counter()
     environment = capture_environment(REPO_ROOT)
-    manifest_digest = _sha256(inputs.manifest_path)
+    manifest_digest = sha256_of_file(inputs.manifest_path)
     manifest = pd.read_parquet(inputs.manifest_path)
     split, split_digest = _read_checked(inputs.split_path)
     mapping_digest = (
-        _sha256(inputs.mapping_queue_path) if inputs.mapping_queue_path else "not_applicable"
+        sha256_of_file(inputs.mapping_queue_path) if inputs.mapping_queue_path else "not_applicable"
     )
     store, row_of, matrix = _load_store(inputs)
     identity = store.identity
@@ -550,7 +546,7 @@ def run_track(inputs: GateInputs) -> GateResult:
         "evaluations": outputs,
         "prototypes": {
             "parquet": str(written.parquet),
-            "parquet_sha256": _sha256(written.parquet),
+            "parquet_sha256": sha256_of_file(written.parquet),
             "class_count": table.num_rows,
             "support_counts": {
                 "min": int(primary_support_counts.min()),

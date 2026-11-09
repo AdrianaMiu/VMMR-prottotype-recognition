@@ -14,7 +14,6 @@ Usage: uv run python scripts/run_leakage_audit.py [--fixture tests/fixtures/e0_1
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
 import tempfile
 from collections.abc import Sequence
@@ -39,6 +38,7 @@ from avr.data.names import load_name_tables
 from avr.data.split_track_a import SPLIT_NAME, build_track_a, read_official_split
 from avr.data.split_track_b import EligibilityThresholds, build_track_b_splits
 from avr.data.splits_io import write_split_manifest
+from avr.io import sha256_of_file
 
 REPO_ROOT = CONFIG_DIR.parent
 MANIFEST = REPO_ROOT / "data" / "manifests" / f"{MANIFEST_NAME}.parquet"
@@ -46,10 +46,6 @@ PATHS = REPO_ROOT / "data" / "paths" / f"{PATHS_NAME}.parquet"
 TRACK_A = REPO_ROOT / "data" / "splits" / "track_a" / f"{SPLIT_NAME}.parquet"
 TRACK_B_DIR = REPO_ROOT / "data" / "splits" / "track_b"
 REPORTS_DIR = REPO_ROOT / "reports" / "leakage"
-
-
-def _digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _skipped(check: str, note: str) -> Finding:
@@ -76,7 +72,7 @@ def audit_fixture(fixture_dir: Path, reports_dir: Path) -> AuditResult:
 def audit_published(reports_dir: Path, tmp: Path) -> list[AuditResult]:
     cfg = load_config()
     manifest = pd.read_parquet(MANIFEST)
-    manifest_digest = _digest(MANIFEST)
+    manifest_digest = sha256_of_file(MANIFEST)
     root = (REPO_ROOT / cfg.dataset.root).resolve()
     dataset_ready = PATHS.is_file() and (root / NAME_MAT).is_file()
     paths = pd.read_parquet(PATHS) if dataset_ready else None
@@ -121,7 +117,7 @@ def audit_published(reports_dir: Path, tmp: Path) -> list[AuditResult]:
     inputs = {
         **common_inputs,
         "split": str(TRACK_A.relative_to(REPO_ROOT)),
-        "split sha256": _digest(TRACK_A),
+        "split sha256": sha256_of_file(TRACK_A),
     }
     results.append(audit_split("track_a", findings, reports_dir, inputs))
 
@@ -149,7 +145,7 @@ def audit_published(reports_dir: Path, tmp: Path) -> list[AuditResult]:
         inputs = {
             **common_inputs,
             "split": str(split_path.relative_to(REPO_ROOT)),
-            "split sha256": _digest(split_path),
+            "split sha256": sha256_of_file(split_path),
         }
         results.append(audit_split(f"track_b_seed_{seed}", findings, reports_dir, inputs))
     return results

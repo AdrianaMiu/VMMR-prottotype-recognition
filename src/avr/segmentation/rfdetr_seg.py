@@ -8,7 +8,6 @@ here against the SHA-256 pinned in the config before any prediction.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -16,6 +15,7 @@ import numpy as np
 from omegaconf import DictConfig
 from PIL import Image
 
+from avr.io import sha256_of_file
 from avr.segmentation.base import Instance, instances_from_arrays
 
 VARIANT_CLASSES = {
@@ -31,7 +31,7 @@ class CheckpointMismatch(RuntimeError):
 
 
 def verify_checkpoint(path: Path, expected_sha256: str) -> str:
-    digest = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    digest = sha256_of_file(Path(path))
     if digest != expected_sha256:
         raise CheckpointMismatch(f"{path}: sha256 {digest} != pinned {expected_sha256}")
     return digest

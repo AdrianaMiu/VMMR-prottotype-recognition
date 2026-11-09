@@ -6,7 +6,8 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from avr.data.splits_io import read_sidecar_sha256, write_split_manifest
+from avr.data.splits_io import write_split_manifest
+from avr.io import read_sidecar_sha256
 
 
 def test_write_split_manifest_writes_parquet_and_a_sha256sum_style_sidecar(tmp_path: Path):

@@ -11,7 +11,6 @@ left as distributed (``OFFICIAL_SPLIT_STATUS``).
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -20,7 +19,7 @@ from pydantic import BaseModel
 
 from avr.data.manifest import IMAGE_DIR, MAX_YEAR, MIN_YEAR, UNKNOWN_YEAR_FOLDER
 from avr.data.names import NameTables
-from avr.data.splits_io import read_sidecar_sha256
+from avr.io import read_sidecar_sha256, sha256_of_file
 
 ID_CAP = 50
 OFFICIAL_SPLIT_STATUS = "reported, official split not altered"
@@ -182,7 +181,7 @@ def check_labels_match(manifest: pd.DataFrame, paths: pd.DataFrame, names: NameT
 
 def check_regeneration(name: str, rebuilt: Path, sidecar: Path) -> Finding:
     """The rebuilt table hashes to the digest pinned in the published sidecar."""
-    digest = hashlib.sha256(rebuilt.read_bytes()).hexdigest()
+    digest = sha256_of_file(rebuilt)
     published = read_sidecar_sha256(sidecar)
     mismatched = [name] if digest != published else []
     return _finding(
@@ -349,7 +348,7 @@ def e0_fixture_findings(fixture_dir: Path) -> tuple[list[Finding], dict[str, str
     split["sha256"] = split["sha256"].fillna("")
     rows = _with_groups(split, manifest)
 
-    slice_digest = hashlib.sha256(slice_path.read_bytes()).hexdigest()
+    slice_digest = sha256_of_file(slice_path)
     pinned = split_file["manifest_slice_sha256"]
     findings = [check_split_ids_in_manifest(split, manifest)]
     findings += [check_no_group_crosses(rows, column, "partition") for column in GROUP_COLUMNS]

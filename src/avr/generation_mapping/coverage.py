@@ -12,7 +12,6 @@ interval is derived here.
 
 from __future__ import annotations
 
-import hashlib
 from collections import Counter
 from pathlib import Path
 
@@ -20,6 +19,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from avr.generation_mapping.queue import IMAGE_COUNT
+from avr.io import sha256_of_file
 
 SPAN_MIN = 7
 GAP_MIN = 3
@@ -151,7 +151,7 @@ def _model_rows(models: list[ModelSummary], with_reasons: bool) -> list[list[obj
 
 def render_report(stats: CoverageStats, queue_csv: Path, version: str) -> str:
     """The coverage report as Markdown; the checksum is the SHA-256 of ``queue_csv``."""
-    digest = hashlib.sha256(queue_csv.read_bytes()).hexdigest()
+    digest = sha256_of_file(queue_csv)
     r, i = stats.model_year_records, stats.images
     lines = [
         f"# Generation mapping coverage report v{version}",

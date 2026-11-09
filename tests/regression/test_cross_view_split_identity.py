@@ -15,7 +15,7 @@ import pytest
 
 from avr.config import CONFIG_DIR, load_config
 from avr.data.cross_view import CrossViewThresholds, build_cross_view_splits
-from avr.data.splits_io import read_sidecar_sha256
+from avr.io import read_sidecar_sha256
 
 REPO_ROOT = CONFIG_DIR.parent
 SPLITS = REPO_ROOT / "data" / "splits" / "track_b"

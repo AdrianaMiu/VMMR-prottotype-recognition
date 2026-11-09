@@ -10,7 +10,6 @@ publication discipline as the image manifest).
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections import Counter
 from collections.abc import Callable
@@ -21,6 +20,7 @@ import pyarrow.parquet as pq
 from PIL import Image
 from pydantic import BaseModel
 
+from avr.io import write_sha256_sidecar
 from avr.preprocessing.p3 import DEFAULT_MIN_IOU, build_p3, mask_path, save_mask
 from avr.segmentation.base import Segmenter
 
@@ -161,7 +161,6 @@ def merge_shards(shards_dir: Path, manifests_dir: Path) -> MetadataOutputs:
         summary=manifests_dir / f"{METADATA_NAME}.summary.json",
     )
     pq.write_table(table, out.metadata, compression="zstd")
-    digest = hashlib.sha256(out.metadata.read_bytes()).hexdigest()
-    out.sha256.write_text(f"{digest}  {out.metadata.name}\n")
+    write_sha256_sidecar(out.metadata)
     out.summary.write_text(json.dumps(summarise(table.to_pylist()), indent=2) + "\n")
     return out
