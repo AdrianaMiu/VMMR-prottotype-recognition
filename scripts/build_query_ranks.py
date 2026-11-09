@@ -9,7 +9,7 @@ encoder). For Track A (official query half) and Track B (seed 73, test) it write
 * ``data/results/query_ranks/<track>/<encoder>/<variant>.parquet`` (public columns only; DVC
   tracked, the ``.parquet.dvc`` pointer is what gets committed),
 * ``reports/query_ranks/<track>_<variant>_per_class.csv``, and
-* ``reports/query_ranks/cmc.csv`` (rows of the track, encoder and variant replaced in place),
+* ``reports/query_ranks/cmc.csv`` (recomputed from every per-query table present),
 
 after computing every table ``experiment.repeats`` times and checking the Parquet bytes are
 identical. A run manifest is recorded through ``tracked_run`` for each track.
@@ -48,13 +48,16 @@ def parquet_bytes(table: pd.DataFrame) -> bytes:
     return buffer.getvalue()
 
 
-def _update_cmc(path: Path, new: pd.DataFrame) -> None:
-    keys = ["track", "encoder", "variant"]
-    old = pd.read_csv(path, float_precision="round_trip") if path.exists() else new.iloc[0:0]
-    drop = old.set_index(keys).index.isin(new.set_index(keys).index.unique())
-    merged = pd.concat([old[~drop], new], ignore_index=True)
-    merged = merged.sort_values([*keys, "k"]).reset_index(drop=True)
-    merged.to_csv(path, index=False)
+def rebuild_cmc(results_dir: Path, path: Path) -> None:
+    """Recompute cmc.csv from every per-query table under ``results_dir``.
+
+    The CSV is never read back: parsing floats from text would not round-trip exactly, so the
+    file is always a pure function of the Parquet tables.
+    """
+    tables = sorted(results_dir.glob("*/*/*.parquet"))
+    frames = [cmc_table(pd.read_parquet(t)) for t in tables]
+    keys = ["track", "encoder", "variant", "k"]
+    pd.concat(frames, ignore_index=True).sort_values(keys).to_csv(path, index=False)
 
 
 def main(argv: list[str]) -> dict:
@@ -86,7 +89,7 @@ def main(argv: list[str]) -> dict:
         out.write_bytes(blobs[0])
         per_class = per_class_summary(table, result.class_names)
         per_class.to_csv(report_dir / f"{track}_{variant}_per_class.csv", index=False)
-        _update_cmc(report_dir / "cmc.csv", cmc_table(table))
+        rebuild_cmc(results_dir, report_dir / "cmc.csv")
         _record_run(cfg, inputs, result, table)
         summary[track] = {
             "rows": len(table),
