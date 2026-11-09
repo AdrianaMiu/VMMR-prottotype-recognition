@@ -42,3 +42,13 @@ def test_track_b_split_group_records_the_protocol_eligibility_thresholds():
     assert cfg.split_track_b.primary_seed == 73
     assert list(cfg.split_track_b.sensitivity_seeds) == [13, 37, 101, 137]
     assert dict(cfg.split_track_b.fractions) == {"support": 0.6, "validation": 0.2, "test": 0.2}
+
+
+def test_track_b_split_group_records_the_cross_view_condition():
+    cfg = load_config()
+
+    # ADR-0004: one variant per CompCars viewpoint; a class needs >= 5 support and >= 1
+    # test image after filtering.
+    assert list(cfg.split_track_b.cross_view.views) == [1, 2, 3, 4, 5]
+    assert cfg.split_track_b.cross_view.min_support == 5
+    assert cfg.split_track_b.cross_view.min_test == 1

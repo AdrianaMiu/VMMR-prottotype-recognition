@@ -14,3 +14,10 @@ fractions:
   test: 0.2
 primary_seed: 73
 sensitivity_seeds: [13, 37, 101, 137]
+# ADR-0004 cross-view condition: one variant per held-out CompCars viewpoint, derived
+# from every stored seed by filtering (no image changes partition). A class stays in a
+# variant only with >= min_support support and >= min_test test images after filtering.
+cross_view:
+  views: [1, 2, 3, 4, 5]
+  min_support: 5
+  min_test: 1
