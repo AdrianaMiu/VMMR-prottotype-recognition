@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -47,6 +48,30 @@ class ShardManifest(StoreIdentity):
     dim: int
     shard_sha256: str
     written_at: datetime
+
+
+def embedding_table(image_ids: Sequence[str], embeddings: np.ndarray) -> pa.Table:
+    """The shard table: ``image_id`` strings and ``embedding`` fixed-size float32 lists."""
+    embeddings = np.asarray(embeddings, dtype=np.float32)
+    dim = int(embeddings.shape[1])
+    return pa.table(
+        {
+            "image_id": pa.array(list(image_ids), pa.string()),
+            "embedding": pa.FixedSizeListArray.from_arrays(
+                pa.array(embeddings.reshape(-1), pa.float32()), dim
+            ),
+        }
+    )
+
+
+def read_embedding_table(path: Path) -> tuple[list[str], np.ndarray]:
+    """Read a table written by :func:`embedding_table` as ``(image_ids, [n, dim] float32)``."""
+    table = pq.read_table(path)
+    ids = table.column("image_id").to_pylist()
+    column = table.column("embedding").combine_chunks()
+    dim = column.type.list_size
+    matrix = np.asarray(column.values.to_numpy(zero_copy_only=False), dtype=np.float32)
+    return ids, matrix.reshape(len(ids), dim)
 
 
 class EmbeddingStore:
@@ -105,14 +130,7 @@ class EmbeddingStore:
             )
         self._check_identity()
         dim = int(embeddings.shape[1])
-        table = pa.table(
-            {
-                "image_id": pa.array(list(image_ids), pa.string()),
-                "embedding": pa.FixedSizeListArray.from_arrays(
-                    pa.array(embeddings.reshape(-1), pa.float32()), dim
-                ),
-            }
-        )
+        table = embedding_table(image_ids, embeddings)
         self.directory.mkdir(parents=True, exist_ok=True)
         parquet = self.shard_path(index)
         tmp = parquet.with_suffix(".parquet.tmp")
@@ -137,12 +155,7 @@ class EmbeddingStore:
         return ShardManifest.model_validate_json(self.shard_manifest_path(index).read_text())
 
     def load_shard(self, index: int) -> tuple[list[str], np.ndarray]:
-        table = pq.read_table(self.shard_path(index))
-        ids = table.column("image_id").to_pylist()
-        column = table.column("embedding").combine_chunks()
-        dim = column.type.list_size
-        matrix = np.asarray(column.values.to_numpy(zero_copy_only=False), dtype=np.float32)
-        return ids, matrix.reshape(len(ids), dim)
+        return read_embedding_table(self.shard_path(index))
 
     def load_all(self) -> tuple[list[str], np.ndarray]:
         """Every finished shard in index order as ``(image_ids, [n, dim] float32)``."""

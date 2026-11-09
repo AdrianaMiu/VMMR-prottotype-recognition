@@ -12,7 +12,7 @@ from __future__ import annotations
 import platform
 import subprocess
 from datetime import UTC, datetime
-from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
@@ -107,7 +107,11 @@ def capture_hardware() -> dict[str, str | None]:
 
 
 def capture_software_versions() -> dict[str, str]:
-    """Interpreter and core library versions; ``torch`` only when importable."""
+    """Interpreter and core library versions; ``torch`` only when installed.
+
+    The torch version is read from the package metadata so that recording a run never
+    imports torch (CPU-only pipelines such as E0 must stay torch-free).
+    """
     import numpy
     import pandas
 
@@ -120,8 +124,8 @@ def capture_software_versions() -> dict[str, str]:
         "avr": avr.__version__,
     }
     try:
-        versions["torch"] = import_module("torch").__version__
-    except ImportError:
+        versions["torch"] = version("torch")
+    except PackageNotFoundError:
         pass
     return versions
 

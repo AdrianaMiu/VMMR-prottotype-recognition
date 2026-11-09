@@ -92,3 +92,18 @@ def test_software_versions_name_python_numpy_pandas_and_avr():
 
     hardware = capture_hardware()
     assert set(hardware) >= {"cpu", "gpu"}
+
+
+def test_software_versions_record_torch_without_importing_it():
+    import subprocess
+    import sys
+
+    program = (
+        "import sys\n"
+        "from avr.tracking.manifest import capture_software_versions\n"
+        "versions = capture_software_versions()\n"
+        "assert 'torch' not in sys.modules, 'torch was imported'\n"
+        "print('torch' in versions)\n"
+    )
+    result = subprocess.run([sys.executable, "-c", program], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
