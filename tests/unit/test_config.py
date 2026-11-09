@@ -25,5 +25,5 @@ def test_tracking_group_points_at_the_local_file_store():
 def test_dedup_group_records_the_phash_threshold():
     cfg = load_config()
 
-    assert cfg.dedup.phash_hamming_threshold == 6
+    assert cfg.dedup.phash_hamming_threshold == 2  # ADR-0005
     assert cfg.dedup.phash_hash_size == 8

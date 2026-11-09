@@ -265,7 +265,7 @@ def assign_duplicate_groups(
                 make_model_b=_make_model(rows[max(a, b, key=lambda k: rows[k].image_id)]),
             )
             for a, b, d in pairs
-            if d in (threshold - 1, threshold)
+            if d <= threshold
         ),
         key=lambda p: (p.distance, p.image_id_a, p.image_id_b),
     )
@@ -374,8 +374,9 @@ def render_readme(stats: DedupStats, panel_count: int, runtime_seconds: float | 
         "",
         "## Visual audit near the threshold",
         "",
-        f"`{PAIRS_CSV_NAME}` lists every pair at distance threshold or threshold-1 with the",
-        f"make/model of each side; {panel_count} of them, spread evenly over the list, are",
+        f"`{PAIRS_CSV_NAME}` lists every pHash pair within the threshold (the pairs that",
+        "create near links) with the make/model of each side, sorted by distance;",
+        f"{panel_count} of them, spread evenly over the list, are",
         f"exported as side-by-side JPEG panels under `{PAIRS_DIR_NAME}/` (git-ignored: CompCars",
         "pixels are never committed). The `panel` column names the file when one exists.",
         "",
