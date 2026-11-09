@@ -10,6 +10,7 @@ __pycache__/
 # data: CompCars images and any path table are never committed
 data/external/
 data/paths/
+data/masks/
 *.parquet
 !data/manifests/**/*.parquet
 *.pkl
