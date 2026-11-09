@@ -1,0 +1,25 @@
+# Canonical OpenAI CLIP baseline (PROTOCOL.md §9). Pooled output is CLIPModel
+# get_image_features: the visual projection of the CLS token, 768-D. Verification fields
+# are written by scripts/verify_encoder_registry.py; do not edit them by hand.
+name: clip_vitl14_336
+model_id: openai/clip-vit-large-patch14-336
+source: huggingface
+revision: ce19dc912ca5cd21c8a653c79e251e808ccabcd1
+license: MIT
+parameter_count: 304293888
+input_resolution: 336
+native_dim: 768
+pooling: projection
+preprocessing:
+  id: clip_vitl14_336_v1
+  resize_shortest_edge: 336
+  center_crop: 336
+  processor: CLIPImageProcessor
+dtype: float16
+checkpoint_file: pytorch_model.bin
+checkpoint_sha256: c6032c2e0caae3dc2d4fba35535fa6307dbb49df59c7e182b1bc4b3329b81801
+verified_at: '2026-11-06T14:53:08Z'
+verified_dtype: float32
+verified_output_shape:
+- 1
+- 768
