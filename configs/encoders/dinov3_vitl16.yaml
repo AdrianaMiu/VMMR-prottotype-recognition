@@ -18,8 +18,8 @@ preprocessing:
 dtype: float16
 checkpoint_file: model.safetensors
 checkpoint_sha256: dcb2e45127cccbf1601e5f42fef165eea275c8e5213197e8dcf3f48822718179
-verified_at: '2026-11-06T14:51:17Z'
-verified_dtype: float32
+verified_at: '2026-11-09T14:11:49Z'
+verified_dtype: float16
 verified_output_shape:
 - 1
 - 1024

@@ -18,8 +18,8 @@ preprocessing:
 dtype: float16
 checkpoint_file: pytorch_model.bin
 checkpoint_sha256: c6032c2e0caae3dc2d4fba35535fa6307dbb49df59c7e182b1bc4b3329b81801
-verified_at: '2026-11-06T14:53:08Z'
-verified_dtype: float32
+verified_at: '2026-11-09T14:11:42Z'
+verified_dtype: float16
 verified_output_shape:
 - 1
 - 768
