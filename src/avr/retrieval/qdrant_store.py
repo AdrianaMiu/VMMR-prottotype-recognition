@@ -1,4 +1,4 @@
-"""Prototype collections in Qdrant, embedded local mode (PROTOCOL.md §12 "Online service").
+"""Prototype collections in Qdrant, embedded or server mode (PROTOCOL.md §12 "Online service").
 
 The collection name is the §12 version key
 ``<dataset_protocol>__<mapping_version>__<encoder>__<preprocessing>__<dimension>__<prototype_method>``.
@@ -10,20 +10,23 @@ model or year. A keyword payload index is declared for every keyword field; embe
 mode accepts the declaration but searches by brute force, so exact search is what both
 backends do, and the parity check against the matrix ranking lives in the M1 gate.
 
-The local store is a directory (``data/qdrant/`` by default, git-ignored) that one client
-may hold at a time; every function here opens a client and closes it before returning.
+A :data:`QdrantTarget` names the backend: :class:`LocalTarget` is the embedded store, a
+directory (``data/qdrant/`` by default, git-ignored) that one client may hold at a time;
+:class:`ServerTarget` is a Qdrant server reached over REST (``docker/docker-compose.yml``,
+``configs/service/qdrant.yaml``). Every function here opens a client and closes it before
+returning, and a bare :class:`~pathlib.Path` is still accepted as a local target.
 """
 
 from __future__ import annotations
 
 import warnings
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from avr.prototypes.persist import PAYLOAD_COLUMNS
 
@@ -54,6 +57,41 @@ def collection_name(
     return "__".join((*parts, prototype_method))
 
 
+class LocalTarget(BaseModel):
+    """Embedded local mode: the store is a directory."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    path: Path
+
+
+class ServerTarget(BaseModel):
+    """A Qdrant server reached over REST; ``api_key`` is sent when set."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    url: str
+    api_key: str | None = None
+    timeout_s: int = 30
+
+
+QdrantTarget = LocalTarget | ServerTarget
+
+
+def resolve_target(target: QdrantTarget | Path | str | Mapping) -> QdrantTarget:
+    """A target from a model, a local path or a ``{"path": ...}`` / ``{"url": ...}`` mapping."""
+    if isinstance(target, LocalTarget | ServerTarget):
+        return target
+    if isinstance(target, Path | str):
+        return LocalTarget(path=Path(target))
+    mapping = dict(target)
+    if ("path" in mapping) == ("url" in mapping):
+        raise ValueError("a Qdrant target has exactly one of 'path' or 'url'")
+    if "path" in mapping:
+        return LocalTarget(**mapping)
+    return ServerTarget(**mapping)
+
+
 class ExportSummary(BaseModel):
     collection: str
     point_count: int
@@ -69,12 +107,22 @@ class Hit:
     payload: dict
 
 
-def _client(path: Path):
+def _client(target: QdrantTarget | Path):
     from qdrant_client import QdrantClient
 
-    path = Path(path)
-    path.mkdir(parents=True, exist_ok=True)
-    return QdrantClient(path=str(path))
+    target = resolve_target(target)
+    if isinstance(target, LocalTarget):
+        target.path.mkdir(parents=True, exist_ok=True)
+        return QdrantClient(path=str(target.path))
+    # The pinned server (docker/docker-compose.yml) may trail the client by more than one
+    # minor version; the compatibility check only warns, and the REST calls used here
+    # (collections, payload indexes, query_points) exist on both sides.
+    return QdrantClient(
+        url=target.url,
+        api_key=target.api_key,
+        timeout=target.timeout_s,
+        check_compatibility=False,
+    )
 
 
 def _keyword(value) -> str | None:
@@ -97,8 +145,10 @@ def _payloads(table: pa.Table) -> list[dict]:
     return payloads
 
 
-def export_prototypes(path: Path, collection: str, table: pa.Table) -> ExportSummary:
-    """(Re)create ``collection`` under ``path`` from a prototype table."""
+def export_prototypes(
+    target: QdrantTarget | Path, collection: str, table: pa.Table
+) -> ExportSummary:
+    """(Re)create ``collection`` on ``target`` from a prototype table."""
     from qdrant_client import models
 
     column = table.column("embedding").combine_chunks()
@@ -107,7 +157,7 @@ def export_prototypes(path: Path, collection: str, table: pa.Table) -> ExportSum
     vectors = vectors.reshape(table.num_rows, dim)
     payloads = _payloads(table)
 
-    client = _client(path)
+    client = _client(target)
     try:
         if client.collection_exists(collection):
             client.delete_collection(collection)
@@ -145,15 +195,27 @@ def export_prototypes(path: Path, collection: str, table: pa.Table) -> ExportSum
     )
 
 
-def query_top_k(path: Path, collection: str, queries: np.ndarray, k: int) -> list[list[Hit]]:
-    """Exact top-``k`` hits per query, best first, from the local collection."""
+def query_top_k(
+    target: QdrantTarget | Path,
+    collection: str,
+    queries: np.ndarray,
+    k: int,
+    exact: bool = True,
+) -> list[list[Hit]]:
+    """Top-``k`` hits per query, best first; ``exact=True`` asks the server for exact search."""
     from qdrant_client import models
 
     queries = np.ascontiguousarray(queries, dtype=np.float32)
-    client = _client(path)
+    client = _client(target)
     try:
         requests = [
-            models.QueryRequest(query=q.tolist(), limit=k, with_payload=True) for q in queries
+            models.QueryRequest(
+                query=q.tolist(),
+                limit=k,
+                with_payload=True,
+                params=models.SearchParams(exact=exact),
+            )
+            for q in queries
         ]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
@@ -167,6 +229,16 @@ def query_top_k(path: Path, collection: str, queries: np.ndarray, k: int) -> lis
         ]
         for response in responses
     ]
+
+
+def list_collections(target: QdrantTarget | Path) -> list[str]:
+    """Collection names on ``target``, sorted."""
+    client = _client(target)
+    try:
+        names = [c.name for c in client.get_collections().collections]
+    finally:
+        client.close()
+    return sorted(names)
 
 
 def top_k_class_ids(hits: Sequence[Sequence[Hit]]) -> list[list[str]]:
