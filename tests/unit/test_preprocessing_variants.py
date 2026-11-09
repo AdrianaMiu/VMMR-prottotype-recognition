@@ -45,6 +45,20 @@ def test_p3_crop_has_the_same_size_and_neutral_background():
     assert (arr[background] == (127, 127, 127)).all()
 
 
+def test_p3_accepts_the_stored_crop_geometry_mask():
+    """``scripts/build_p3_masks.py`` stores masks already projected into the P1 crop."""
+    crop_mask = np.zeros((22, 22), dtype=bool)
+    crop_mask[6:16, 6:16] = True
+    from_full = prepare(_image(), BBOX, "p3", mask=_mask())
+    from_crop = prepare(_image(), BBOX, "p3", mask=crop_mask)
+    np.testing.assert_array_equal(np.asarray(from_crop), np.asarray(from_full))
+
+
+def test_p3_rejects_a_mask_of_unrelated_shape():
+    with pytest.raises(ValueError, match="mask shape"):
+        prepare(_image(), BBOX, "p3", mask=np.ones((5, 5), dtype=bool))
+
+
 def test_p3_requires_a_mask():
     with pytest.raises(ValueError, match="mask"):
         prepare(_image(), BBOX, "p3")

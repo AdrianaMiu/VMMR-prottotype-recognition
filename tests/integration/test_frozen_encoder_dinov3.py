@@ -6,8 +6,10 @@ Expected dimension (768) is the protocol's value for ViT-B/16, not read from the
 Tolerance: the encoder runs in fp16 on CUDA. Batched and single-image forward passes take
 different CUDA kernels (GEMM tiling depends on the batch dimension), so fp16 activations can
 differ by a few units in the last place; after float32 casting and L2 normalisation the
-embeddings agree to about 1e-3 in max-abs difference, hence the 1e-3 bound asked for by
-the ticket.
+embeddings still differ slightly. Measured on this machine (RTX 3080, torch 2.7, eight
+random 400x300 images): max-abs difference 2.3e-4, norm deviation 6e-8. The bound is 1e-3,
+about four times the measured difference, so a kernel-level change is tolerated but a wrong
+pooling or a missing normalisation (differences of order 1e-1 or more) is not.
 """
 
 from __future__ import annotations
