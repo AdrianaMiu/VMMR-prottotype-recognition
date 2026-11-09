@@ -1,0 +1,51 @@
+# Recognition-service profiles (PROTOCOL.md §16). A profile selects track, encoder,
+# preprocessing variant, dimension transform and prototype method; the service maps it to
+# the §12 collection name
+#   <dataset_protocol>__<mapping_version>__<encoder>__<preprocessing_id>+<variant>__<dim>__<method>
+# and reports the prototype table's SHA-256 as `index_version`. `prototype_table` is relative
+# to the prototypes directory (AVR_PROTOTYPES_DIR, default data/prototypes); the embedded
+# Qdrant store is AVR_QDRANT_DIR (default data/qdrant). The four entries are the M1 gate
+# collections (DINOv3 ViT-B/16, M0 global mean, native 768-d). `accept_threshold` is a
+# cosine-similarity cut for the `decision` field, not a probability.
+default_profile_id: track_a__dinov3_vitb16__p1__native__m0
+profiles:
+  - profile_id: track_a__dinov3_vitb16__p1__native__m0
+    track: track_a
+    dataset_protocol: track_a_official_cvpr2015
+    mapping_version: none
+    encoder: dinov3_vitb16
+    variant: p1
+    dimension: native
+    prototype_method: m0_global_mean
+    prototype_table: dinov3_vitb16/p1/m0_track_a_official_cvpr2015.parquet
+    accept_threshold: 0.6
+  - profile_id: track_a__dinov3_vitb16__p3__native__m0
+    track: track_a
+    dataset_protocol: track_a_official_cvpr2015
+    mapping_version: none
+    encoder: dinov3_vitb16
+    variant: p3
+    dimension: native
+    prototype_method: m0_global_mean
+    prototype_table: dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet
+    accept_threshold: 0.6
+  - profile_id: track_b__dinov3_vitb16__p1__native__m0
+    track: track_b
+    dataset_protocol: track_b_seed_73
+    mapping_version: v0.1_provisional
+    encoder: dinov3_vitb16
+    variant: p1
+    dimension: native
+    prototype_method: m0_global_mean
+    prototype_table: dinov3_vitb16/p1/m0_track_b_seed_73.parquet
+    accept_threshold: 0.6
+  - profile_id: track_b__dinov3_vitb16__p3__native__m0
+    track: track_b
+    dataset_protocol: track_b_seed_73
+    mapping_version: v0.1_provisional
+    encoder: dinov3_vitb16
+    variant: p3
+    dimension: native
+    prototype_method: m0_global_mean
+    prototype_table: dinov3_vitb16/p3/m0_track_b_seed_73.parquet
+    accept_threshold: 0.6

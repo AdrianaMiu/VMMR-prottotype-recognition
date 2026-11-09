@@ -14,3 +14,14 @@ Fine-grained vehicle make, model and generation recognition on CompCars using fr
 - Work tracking: GitHub issues, milestones M0 to M6
 
 CompCars images are used under the dataset's non-commercial research licence and are never committed or redistributed; public manifests carry an opaque `image_id` and SHA-256 only (see `docs/protocols/compcars-licence.md`).
+
+## Recognition service (PROTOCOL.md §16)
+
+`src/avr/service/` serves per-vehicle ranked results on scene images: RF-DETR detection and
+masks -> P1 or P3 crop per vehicle -> one batched frozen-encoder call -> prototype search ->
+`POST /v1/recognize`. Profiles (`configs/service/profiles.yaml`) name the track, encoder,
+variant and prototype method and map to the §12 collection; `index_version` is the SHA-256 of
+the prototype table. Settings come from `AVR_*` environment variables (`avr.service.settings`);
+run locally with `uv run uvicorn avr.service.app:create_app --factory` and build the image with
+`docker/Dockerfile.service`. Cosine similarities are similarities, never probabilities;
+`calibrated_confidence` and `viewpoint` are `null` until those components exist.
