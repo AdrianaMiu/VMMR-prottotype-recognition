@@ -1,0 +1,5 @@
+outs:
+- md5: ebc5fc561caa41d9057faf653acafb11
+  size: 11032736
+  hash: md5
+  path: compcars_web_images.parquet

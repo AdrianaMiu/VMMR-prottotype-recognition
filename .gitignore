@@ -11,9 +11,11 @@ __pycache__/
 data/external/
 data/paths/
 data/masks/
+# Parquet is git-ignored everywhere. DVC owns the large tables (image manifest, mask metadata,
+# Track B splits and cross-view variants, prototype tables): `dvc add` commits a .dvc pointer
+# and writes its own per-directory .gitignore entries. Only these stay in git directly.
 *.parquet
-!data/manifests/**/*.parquet
-!data/splits/**/*.parquet
+!data/splits/track_a/*.parquet
 !tests/fixtures/**/*.parquet
 *.pkl
 *.npy
