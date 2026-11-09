@@ -1,0 +1,14 @@
+# Per-query rank tables (issue M2-6, PROTOCOL.md §13.2): Track A official query half and
+# Track B seed 73 test partition, one encoder, one preprocessing variant per invocation.
+# Paths are relative to the repository root unless absolute; `embeddings_dir` and
+# `manifest` may point at another checkout's finished store (read only).
+name: query_ranks
+embeddings_dir: data/embeddings
+manifest: data/manifests/compcars_web_images.parquet
+mapping_queue: data/mappings/generation_mapping_queue_v0.1.csv
+results_dir: data/results/query_ranks
+report_dir: reports/query_ranks
+repeats: 2
+splits:
+  track_a: data/splits/track_a/official_cvpr2015.parquet
+  track_b: data/splits/track_b/seed_73.parquet
