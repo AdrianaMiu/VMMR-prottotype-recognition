@@ -1,6 +1,6 @@
 # M1 acceptance gate (issue M1-16, PROTOCOL.md §25 M1)
 
-DINOv3 ViT-B/16 (`configs/encoders/dinov3_vitb16.yaml`), P1 and P3 preprocessing, M0 global-mean prototypes built from support rows only, exact cosine search (matrix multiplication asserted equal to FAISS `IndexFlatIP`), over all 431 Track A classes on the official split and all 2,645 currently eligible Track B classes on seed 73. Built by `scripts/run_m1_gate.py`; this file is rendered from the result JSON files by `scripts/render_m1_gate_readme.py`.
+DINOv3 ViT-B/16 (`configs/encoders/dinov3_vitb16.yaml`), P1 and P3 preprocessing, M0 global-mean prototypes built from support rows only, exact cosine search (matrix multiplication asserted equal to FAISS `IndexFlatIP`), over every Track A class on the official split and the 2,645 currently eligible Track B classes on seed 73. Built by `scripts/run_m1_gate.py`; this file is rendered from the result JSON files by `scripts/render_m1_gate_readme.py`.
 
 **These are internal validation numbers for the M1 gate. They are not article results and must not appear in any article table.** Track B uses the provisional model-year stand-in classes (no approved generation mapping exists yet), so every Track B output is `mapping_status = provisional`. Every Track A output carries the label: *official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded*
 
@@ -10,11 +10,14 @@ Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and t
 
 | output | artifact |
 |---|---|
-| validated manifest | `data/manifests/compcars_web_images.sha256`, `compcars_web_images.summary.json` (136,726 rows, 136,365 valid; the Parquet is rebuilt by `scripts/build_image_manifest.py` and must match the sidecar) |
-| deduplication report | `reports/dedup/README.md`, `reports/dedup/AUDIT.md` (ADR-0005, pHash distance 2) |
-| split manifests | `data/splits/track_a/official_cvpr2015.parquet` + `.sha256`, `reports/splits/track_a/README.md`; `data/splits/track_b/seed_*.sha256`, `summary.json`, `reports/splits/track_b/eligibility_audit.md`; cross-view `data/splits/track_b/cross_view/` (ADR-0004, ADR-0006) |
+| validated manifest | `data/manifests/compcars_web_images.sha256`, `compcars_web_images.summary.json` (136,726 rows, 136,365 valid; the Parquet is DVC-tracked, rebuilt by `scripts/build_image_manifest.py` and verified against the sidecar by every gate run) |
+| deduplication report | `reports/dedup/README.md`, `reports/dedup/AUDIT.md` (ADR-0005, pHash distance 2; 998 duplicate groups in the manifest summary) |
+| split manifests | `data/splits/track_a/official_cvpr2015.parquet` + `.sha256`, `reports/splits/track_a/README.md`; `data/splits/track_b/seed_*.sha256`, `summary.json` (2,645 eligible classes, 118,070 images), `reports/splits/track_b/eligibility_audit.md`; cross-view eligibility (ADR-0004, ADR-0006): `reports/splits/track_b/cross_view/seed_101.md`, `reports/splits/track_b/cross_view/seed_13.md`, `reports/splits/track_b/cross_view/seed_137.md`, `reports/splits/track_b/cross_view/seed_37.md`, `reports/splits/track_b/cross_view/seed_73.md` |
+| P3 masks | `reports/segmentation/README.md` (136,365 images, mask failure rate 0.20%; metadata sha256 recorded per P3 run below) |
+| embedding extraction | `reports/embeddings/README.md` |
 | initial mapping coverage report | `reports/mapping/v0.1/coverage.md` (queue v0.1, every row `provisional`) |
-| leakage audit on the manifests used | `reports/leakage/track_a.md` (PASS; 52 official-split crossing groups reported, not altered) and `reports/leakage/track_b_seed_73.md` (PASS) |
+| leakage audit on the manifests used | `reports/leakage/e0_fixture.md` (PASS), `reports/leakage/track_a.md` (PASS; 52 official-split crossing groups reported, not altered), `reports/leakage/track_b_seed_101.md` (PASS), `reports/leakage/track_b_seed_13.md` (PASS), `reports/leakage/track_b_seed_137.md` (PASS), `reports/leakage/track_b_seed_37.md` (PASS), `reports/leakage/track_b_seed_73.md` (PASS) |
+| generation mapping approval | §23 'all Track B generation rows approved': WAIVED, protocol provisional (issue #17); every Track B class is a model-year stand-in with `mapping_status = provisional` |
 | deterministic run | this report: two repeats per track and variant, prototypes and rank matrices byte-identical, embeddings identical (tables below) |
 
 ## track_a p1

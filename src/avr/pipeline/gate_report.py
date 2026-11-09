@@ -6,45 +6,146 @@ can never drift from the recorded numbers. Every table is internal validation on
 
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Iterable, Sequence
+from pathlib import Path
+
+from pydantic import BaseModel
 
 from avr.data.split_identity import TRACK_A_LABEL
 
 EXPECTED_RUNS = (("track_a", "p1"), ("track_a", "p3"), ("track_b", "p1"), ("track_b", "p3"))
 
-CHECKLIST = (
-    (
-        "validated manifest",
-        "`data/manifests/compcars_web_images.sha256`, `compcars_web_images.summary.json` "
-        "(136,726 rows, 136,365 valid; the Parquet is rebuilt by "
-        "`scripts/build_image_manifest.py` and must match the sidecar)",
-    ),
-    (
-        "deduplication report",
-        "`reports/dedup/README.md`, `reports/dedup/AUDIT.md` (ADR-0005, pHash distance 2)",
-    ),
-    (
-        "split manifests",
-        "`data/splits/track_a/official_cvpr2015.parquet` + `.sha256`, "
-        "`reports/splits/track_a/README.md`; `data/splits/track_b/seed_*.sha256`, "
-        "`summary.json`, `reports/splits/track_b/eligibility_audit.md`; cross-view "
-        "`data/splits/track_b/cross_view/` (ADR-0004, ADR-0006)",
-    ),
-    (
-        "initial mapping coverage report",
-        "`reports/mapping/v0.1/coverage.md` (queue v0.1, every row `provisional`)",
-    ),
-    (
-        "leakage audit on the manifests used",
-        "`reports/leakage/track_a.md` (PASS; 52 official-split crossing groups reported, "
-        "not altered) and `reports/leakage/track_b_seed_73.md` (PASS)",
-    ),
-    (
-        "deterministic run",
-        "this report: two repeats per track and variant, prototypes and rank matrices "
-        "byte-identical, embeddings identical (tables below)",
-    ),
+# --- checklist context: every number comes from a committed record, none is typed here ----
+
+LEAKAGE_DIR = Path("reports") / "leakage"
+MANIFEST_SUMMARY = Path("data") / "manifests" / "compcars_web_images.summary.json"
+MASK_SUMMARY = Path("data") / "manifests" / "p3_mask_metadata.summary.json"
+TRACK_B_SUMMARY = Path("data") / "splits" / "track_b" / "summary.json"
+SEGMENTATION_REPORT = Path("reports") / "segmentation" / "README.md"
+EMBEDDINGS_REPORT = Path("reports") / "embeddings" / "README.md"
+CROSS_VIEW_AUDITS = Path("reports") / "splits" / "track_b" / "cross_view"
+WAIVER_23 = (
+    "§23 'all Track B generation rows approved': WAIVED, protocol provisional (issue #17); "
+    "every Track B class is a model-year stand-in with `mapping_status = provisional`"
 )
+_VERDICT = re.compile(r"Verdict: \*\*(PASS|FAIL)\*\*")
+_CROSSING = re.compile(
+    r"\| no_duplicate_group_id_crosses_support_query \|[^|]*\|[^|]*\|[^|]*crossing_groups=(\d+)"
+)
+
+
+class LeakageSummary(BaseModel):
+    report: str
+    verdict: str
+    official_crossing_groups: int | None = None
+
+
+class ChecklistContext(BaseModel):
+    """Counts and verdicts the checklist cites, read from the committed records."""
+
+    manifest_rows: int
+    manifest_valid: int
+    duplicate_groups: int
+    mask_rows: int
+    mask_failure_rate: float
+    track_b_eligible_classes: int
+    track_b_eligible_images: int
+    leakage: list[LeakageSummary]
+    cross_view_audits: list[str]
+
+
+def leakage_summary(path: Path, repo_root: Path) -> LeakageSummary:
+    text = path.read_text()
+    verdict = _VERDICT.search(text)
+    if verdict is None:
+        raise ValueError(f"{path}: no verdict line")
+    crossing = _CROSSING.search(text)
+    return LeakageSummary(
+        report=path.relative_to(repo_root).as_posix(),
+        verdict=verdict.group(1),
+        official_crossing_groups=int(crossing.group(1)) if crossing else None,
+    )
+
+
+def load_checklist_context(repo_root: Path) -> ChecklistContext:
+    manifest = json.loads((repo_root / MANIFEST_SUMMARY).read_text())
+    masks = json.loads((repo_root / MASK_SUMMARY).read_text())
+    track_b = json.loads((repo_root / TRACK_B_SUMMARY).read_text())
+    return ChecklistContext(
+        manifest_rows=manifest["row_count"],
+        manifest_valid=manifest["valid_count"],
+        duplicate_groups=manifest["duplicate_group_count"],
+        mask_rows=masks["row_count"],
+        mask_failure_rate=masks["mask_failure_rate"],
+        track_b_eligible_classes=track_b["eligible_classes"],
+        track_b_eligible_images=track_b["eligible_images"],
+        leakage=[
+            leakage_summary(p, repo_root) for p in sorted((repo_root / LEAKAGE_DIR).glob("*.md"))
+        ],
+        cross_view_audits=[
+            p.relative_to(repo_root).as_posix()
+            for p in sorted((repo_root / CROSS_VIEW_AUDITS).glob("seed_*.md"))
+        ],
+    )
+
+
+def _leakage_cell(context: ChecklistContext) -> str:
+    parts = []
+    for item in context.leakage:
+        note = ""
+        if item.official_crossing_groups is not None:
+            note = (
+                f"; {item.official_crossing_groups} official-split crossing groups reported, "
+                "not altered"
+            )
+        parts.append(f"`{item.report}` ({item.verdict}{note})")
+    return ", ".join(parts) if parts else "no leakage report found"
+
+
+def checklist(context: ChecklistContext) -> list[tuple[str, str]]:
+    cross_view = ", ".join(f"`{p}`" for p in context.cross_view_audits) or "none"
+    return [
+        (
+            "validated manifest",
+            "`data/manifests/compcars_web_images.sha256`, `compcars_web_images.summary.json` "
+            f"({context.manifest_rows:,} rows, {context.manifest_valid:,} valid; the Parquet is "
+            "DVC-tracked, rebuilt by `scripts/build_image_manifest.py` and verified against the "
+            "sidecar by every gate run)",
+        ),
+        (
+            "deduplication report",
+            "`reports/dedup/README.md`, `reports/dedup/AUDIT.md` (ADR-0005, pHash distance 2; "
+            f"{context.duplicate_groups:,} duplicate groups in the manifest summary)",
+        ),
+        (
+            "split manifests",
+            "`data/splits/track_a/official_cvpr2015.parquet` + `.sha256`, "
+            "`reports/splits/track_a/README.md`; `data/splits/track_b/seed_*.sha256`, "
+            f"`summary.json` ({context.track_b_eligible_classes:,} eligible classes, "
+            f"{context.track_b_eligible_images:,} images), "
+            "`reports/splits/track_b/eligibility_audit.md`; cross-view eligibility "
+            f"(ADR-0004, ADR-0006): {cross_view}",
+        ),
+        (
+            "P3 masks",
+            f"`{SEGMENTATION_REPORT.as_posix()}` ({context.mask_rows:,} images, mask failure "
+            f"rate {context.mask_failure_rate:.2%}; metadata sha256 recorded per P3 run below)",
+        ),
+        ("embedding extraction", f"`{EMBEDDINGS_REPORT.as_posix()}`"),
+        (
+            "initial mapping coverage report",
+            "`reports/mapping/v0.1/coverage.md` (queue v0.1, every row `provisional`)",
+        ),
+        ("leakage audit on the manifests used", _leakage_cell(context)),
+        ("generation mapping approval", WAIVER_23),
+        (
+            "deterministic run",
+            "this report: two repeats per track and variant, prototypes and rank matrices "
+            "byte-identical, embeddings identical (tables below)",
+        ),
+    ]
 
 
 def _yes(flag: bool) -> str:
@@ -182,7 +283,7 @@ def _run_section(r: dict) -> list[str]:
     return lines
 
 
-def render_readme(results: Iterable[dict]) -> str:
+def render_readme(results: Iterable[dict], context: ChecklistContext) -> str:
     results = sorted(results, key=lambda r: (r["track"], r["variant"]))
     present = {(r["track"], r["variant"]) for r in results}
     lines = [
@@ -190,8 +291,9 @@ def render_readme(results: Iterable[dict]) -> str:
         "",
         "DINOv3 ViT-B/16 (`configs/encoders/dinov3_vitb16.yaml`), P1 and P3 preprocessing, "
         "M0 global-mean prototypes built from support rows only, exact cosine search "
-        "(matrix multiplication asserted equal to FAISS `IndexFlatIP`), over all 431 Track A "
-        "classes on the official split and all 2,645 currently eligible Track B classes on "
+        "(matrix multiplication asserted equal to FAISS `IndexFlatIP`), over every Track A "
+        "class on the official split and the "
+        f"{context.track_b_eligible_classes:,} currently eligible Track B classes on "
         "seed 73. Built by `scripts/run_m1_gate.py`; this file is rendered from the result "
         "JSON files by `scripts/render_m1_gate_readme.py`.",
         "",
@@ -212,7 +314,7 @@ def render_readme(results: Iterable[dict]) -> str:
         "| output | artifact |",
         "|---|---|",
     ]
-    lines += [f"| {name} | {where} |" for name, where in CHECKLIST]
+    lines += [f"| {name} | {where} |" for name, where in checklist(context)]
     lines.append("")
     for r in results:
         lines += _run_section(r)
@@ -222,7 +324,7 @@ def render_readme(results: Iterable[dict]) -> str:
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
-def render_from_files(paths: Sequence) -> str:
-    import json
-
-    return render_readme(json.loads(p.read_text()) for p in paths)
+def render_from_files(paths: Sequence[Path], repo_root: Path) -> str:
+    return render_readme(
+        (json.loads(p.read_text()) for p in paths), load_checklist_context(repo_root)
+    )
