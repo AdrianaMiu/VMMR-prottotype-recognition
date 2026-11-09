@@ -21,6 +21,7 @@ from pydantic import BaseModel
 
 from avr.data.manifest import IMAGE_DIR
 from avr.data.split_identity import OFFICIAL_SPLIT_FILES
+from avr.data.splits_io import write_split_manifest
 
 SUPPORT, QUERY = "support", "query"
 FIT, VALIDATION = "fit", "validation"
@@ -242,3 +243,18 @@ identity is recorded in `data/manifests/track_a_split_identity.json`.
   (valid support images); {report.classes_with_validation} classes have a validation unit.
 - Final prototypes are rebuilt from the complete support half once choices are frozen.
 """
+
+
+class TrackAOutputs(BaseModel):
+    manifest: Path
+    sha256: Path
+    readme: Path
+
+
+def write_track_a_split(build: TrackABuild, splits_dir: Path, reports_dir: Path) -> TrackAOutputs:
+    """Write the public manifest with its sidecar under ``splits_dir`` and the README."""
+    written = write_split_manifest(build.table, splits_dir / f"{SPLIT_NAME}.parquet")
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    readme = reports_dir / "README.md"
+    readme.write_text(render_readme(build.report))
+    return TrackAOutputs(manifest=written.manifest, sha256=written.sha256, readme=readme)

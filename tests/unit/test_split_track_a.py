@@ -6,9 +6,11 @@ off the fixture by hand.
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pandas as pd
+import pyarrow.parquet as pq
 import pytest
 
 from avr.data.split_track_a import (
@@ -18,6 +20,7 @@ from avr.data.split_track_a import (
     partition_validation,
     read_official_split,
     render_readme,
+    write_track_a_split,
 )
 
 # image_id, class (make, model), duplicate group, validity. Groups: g1 = {s1, q1} spans
@@ -252,3 +255,17 @@ def test_readme_reports_counts_and_never_a_path(manifest, paths, official):
     assert "| query | 3 | 2 | 1 |" in text
     assert "1 duplicate group" in text and "2 images" in text
     assert "2010" not in text and ".jpg" not in text
+
+
+def test_write_publishes_manifest_sidecar_and_readme(manifest, paths, official, tmp_path: Path):
+    build = build_track_a(manifest, paths, official, fraction=0.2, seed=73)
+
+    out = write_track_a_split(build, tmp_path / "splits", tmp_path / "reports")
+
+    assert out.manifest == tmp_path / "splits" / "official_cvpr2015.parquet"
+    assert out.sha256 == tmp_path / "splits" / "official_cvpr2015.sha256"
+    assert out.readme == tmp_path / "reports" / "README.md"
+    digest = hashlib.sha256(out.manifest.read_bytes()).hexdigest()
+    assert out.sha256.read_text() == f"{digest}  official_cvpr2015.parquet\n"
+    assert pq.read_table(out.manifest).equals(build.table)
+    assert out.readme.read_text() == render_readme(build.report)
