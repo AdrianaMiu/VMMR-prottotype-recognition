@@ -11,7 +11,7 @@ step 3): DINOv3 ``pooler_output`` (CLS token after the final norm), SigLIP2
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -56,10 +56,12 @@ def _count_parameters(*modules: torch.nn.Module) -> int:
     return sum(p.numel() for module in modules for p in module.parameters())
 
 
-# Each loader returns (image_encoder_fn, image_parameter_count, processor_name). The
+# Each loader returns (image_encoder_fn, image_parameter_count, processor_name). The encoder
+# function maps a sequence of PIL images to the pooled tensor ``[n, native_dim]``. The
 # parameter count covers only the modules the image path executes: text towers are never
 # run in this project, so they are not counted.
-Loader = Callable[[EncoderSpec, str, str, torch.dtype], tuple[Callable, int, str]]
+Encode = Callable[[Sequence[Image.Image]], torch.Tensor]
+Loader = Callable[[EncoderSpec, str, str, torch.dtype], tuple[Encode, int, str]]
 
 
 def _load_dinov3(spec, revision, device, dtype):
@@ -69,8 +71,8 @@ def _load_dinov3(spec, revision, device, dtype):
     model = AutoModel.from_pretrained(spec.model_id, revision=revision, dtype=dtype)
     model = model.to(device).eval()
 
-    def encode(image: Image.Image) -> torch.Tensor:
-        inputs = processor(images=image, return_tensors="pt").to(device, dtype)
+    def encode(images: Sequence[Image.Image]) -> torch.Tensor:
+        inputs = processor(images=list(images), return_tensors="pt").to(device, dtype)
         return model(**inputs).pooler_output
 
     return encode, _count_parameters(model), type(processor).__name__
@@ -86,8 +88,8 @@ def _load_siglip2(spec, revision, device, dtype):
     model = Siglip2VisionModel.from_pretrained(spec.model_id, revision=revision, dtype=dtype)
     model = model.to(device).eval()
 
-    def encode(image: Image.Image) -> torch.Tensor:
-        inputs = processor(images=image, return_tensors="pt").to(device)
+    def encode(images: Sequence[Image.Image]) -> torch.Tensor:
+        inputs = processor(images=list(images), return_tensors="pt").to(device)
         inputs["pixel_values"] = inputs["pixel_values"].to(dtype)
         return model(**inputs).pooler_output
 
@@ -101,8 +103,8 @@ def _load_clip(spec, revision, device, dtype):
     model = CLIPModel.from_pretrained(spec.model_id, revision=revision, dtype=dtype)
     model = model.to(device).eval()
 
-    def encode(image: Image.Image) -> torch.Tensor:
-        inputs = processor(images=image, return_tensors="pt").to(device, dtype)
+    def encode(images: Sequence[Image.Image]) -> torch.Tensor:
+        inputs = processor(images=list(images), return_tensors="pt").to(device, dtype)
         features = model.get_image_features(**inputs)
         # transformers >= 5 returns the vision output with the projection written into
         # pooler_output; earlier versions return the projected tensor directly.
@@ -121,14 +123,14 @@ def _load_open_clip(spec, revision, device, dtype):
     )
     model.eval()
 
-    def encode(image: Image.Image) -> torch.Tensor:
-        pixels = preprocess(image).unsqueeze(0).to(device, dtype)
+    def encode(images: Sequence[Image.Image]) -> torch.Tensor:
+        pixels = torch.stack([preprocess(image) for image in images]).to(device, dtype)
         return model.encode_image(pixels)
 
     return encode, _count_parameters(model.visual), f"open_clip:{model_name}"
 
 
-def _select_loader(spec: EncoderSpec) -> Loader:
+def select_loader(spec: EncoderSpec) -> Loader:
     if spec.source == "open_clip":
         return _load_open_clip
     repo = spec.model_id.split("/")[-1]
@@ -157,9 +159,9 @@ def verify_entry(
     checkpoint_path, commit = resolve_checkpoint(spec)
     revision = spec.revision if spec.source == "open_clip" else commit
     torch_dtype = TORCH_DTYPES[dtype]
-    encode, parameter_count, processor = _select_loader(spec)(spec, revision, device, torch_dtype)
+    encode, parameter_count, processor = select_loader(spec)(spec, revision, device, torch_dtype)
     with torch.inference_mode():
-        output = encode(image.convert("RGB"))
+        output = encode([image.convert("RGB")])
     return VerificationResult(
         name=spec.name,
         revision=revision,
