@@ -42,3 +42,6 @@ data/embeddings/
 
 # M1 gate outputs: persisted prototypes and the embedded Qdrant store (sha256 sidecars are committed)
 data/qdrant/
+
+# Qdrant server storage mounted by docker/docker-compose.yml (M5-1)
+data/qdrant_server/
