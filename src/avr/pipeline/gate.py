@@ -13,7 +13,7 @@ Evaluations per track (PROTOCOL.md §5):
 * Track A, ``official_full``: prototypes from every valid image of the official support
   half, queries from the official query half; ``validation_fit_only``: prototypes from the
   ``fit`` partition only, queries from the nested ``validation`` partition. Every output
-  carries :data:`TRACK_A_SPLIT_LABEL`.
+  carries :data:`avr.data.split_identity.TRACK_A_LABEL`.
 * Track B, ``test`` and ``validation``: prototypes from the ``support`` partition, queries
   from the named partition restricted to query-eligible rows (known viewpoint). Classes
   are the provisional model-year stand-ins of the split table, so every output is marked
@@ -37,6 +37,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
+from avr.data.split_identity import TRACK_A_LABEL
 from avr.encoders.store import EmbeddingStore
 from avr.evaluation.classification import ClassificationMetrics, classification_metrics
 from avr.evaluation.hierarchy import error_decomposition, parent_ranking_metrics
@@ -56,11 +57,6 @@ from avr.tracking.mlflow_run import REPO_ROOT, tracked_run
 
 Track = Literal["track_a", "track_b"]
 
-# The exact label from docs/protocols/track-a-split-identity.md; every Track A table carries it.
-TRACK_A_SPLIT_LABEL = (
-    "official CVPR 2015 half/half classification split (30,955 images, 431 models); "
-    "release version unverified; hashes recorded."
-)
 NOT_AN_ARTICLE_RESULT = (
     "internal validation only (M1 acceptance gate); not an article result and not to be "
     "cited in any article table"
@@ -533,7 +529,7 @@ def run_track(inputs: GateInputs) -> GateResult:
         "track": inputs.track,
         "variant": inputs.variant,
         "protocol_id": inputs.protocol_id,
-        "split_label": TRACK_A_SPLIT_LABEL if inputs.track == "track_a" else inputs.protocol_id,
+        "split_label": TRACK_A_LABEL if inputs.track == "track_a" else inputs.protocol_id,
         "mapping_status": "not_applicable" if inputs.track == "track_a" else "provisional",
         "mapping_version": MAPPING_VERSION[inputs.track],
         "embedding_store": {

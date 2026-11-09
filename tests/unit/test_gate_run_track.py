@@ -17,11 +17,12 @@ import pyarrow.parquet as pq
 import pytest
 
 from avr.data.manifest import PUBLIC_SCHEMA
+from avr.data.split_identity import TRACK_A_LABEL
 from avr.data.split_track_a import PUBLIC_SCHEMA as TRACK_A_SCHEMA
 from avr.data.split_track_b import OUTPUT_SCHEMA as TRACK_B_SCHEMA
 from avr.data.splits_io import write_split_manifest
 from avr.encoders.store import EmbeddingStore, StoreIdentity
-from avr.pipeline.gate import TRACK_A_SPLIT_LABEL, GateInputs, run_track
+from avr.pipeline.gate import GateInputs, run_track
 from avr.prototypes.persist import read_prototype_table
 
 IDENTITY = StoreIdentity(
@@ -169,7 +170,8 @@ def test_track_a_metrics_match_the_hand_calculation(track_a: GateInputs):
     r = result.results
 
     assert r["article_result"] is False
-    assert r["split_label"] == TRACK_A_SPLIT_LABEL
+    assert r["split_label"] == TRACK_A_LABEL
+    assert not r["split_label"].endswith(".")
     assert r["mapping_status"] == "not_applicable"
     full = r["evaluations"]["official_full"]
     assert full["support_images"] == 6

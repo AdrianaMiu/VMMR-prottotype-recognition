@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 
-from avr.pipeline.gate import TRACK_A_SPLIT_LABEL
+from avr.data.split_identity import TRACK_A_LABEL
 
 EXPECTED_RUNS = (("track_a", "p1"), ("track_a", "p3"), ("track_b", "p1"), ("track_b", "p3"))
 
@@ -198,7 +198,7 @@ def render_readme(results: Iterable[dict]) -> str:
         "results and must not appear in any article table.** Track B uses the provisional "
         "model-year stand-in classes (no approved generation mapping exists yet), so every "
         "Track B output is `mapping_status = provisional`. Every Track A output carries the "
-        f"label: *{TRACK_A_SPLIT_LABEL}*",
+        f"label: *{TRACK_A_LABEL}*",
         "",
         "Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and the "
         "embedded Qdrant store under `data/qdrant/`; both are git-ignored and only the "

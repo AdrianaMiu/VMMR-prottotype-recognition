@@ -4,7 +4,7 @@
   "track": "track_a",
   "variant": "p3",
   "protocol_id": "track_a_official_cvpr2015",
-  "split_label": "official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.",
+  "split_label": "official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded",
   "mapping_status": "not_applicable",
   "mapping_version": "none",
   "embedding_store": {

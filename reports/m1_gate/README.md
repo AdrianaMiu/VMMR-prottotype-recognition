@@ -2,7 +2,7 @@
 
 DINOv3 ViT-B/16 (`configs/encoders/dinov3_vitb16.yaml`), P1 and P3 preprocessing, M0 global-mean prototypes built from support rows only, exact cosine search (matrix multiplication asserted equal to FAISS `IndexFlatIP`), over all 431 Track A classes on the official split and all 2,645 currently eligible Track B classes on seed 73. Built by `scripts/run_m1_gate.py`; this file is rendered from the result JSON files by `scripts/render_m1_gate_readme.py`.
 
-**These are internal validation numbers for the M1 gate. They are not article results and must not appear in any article table.** Track B uses the provisional model-year stand-in classes (no approved generation mapping exists yet), so every Track B output is `mapping_status = provisional`. Every Track A output carries the label: *official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.*
+**These are internal validation numbers for the M1 gate. They are not article results and must not appear in any article table.** Track B uses the provisional model-year stand-in classes (no approved generation mapping exists yet), so every Track B output is `mapping_status = provisional`. Every Track A output carries the label: *official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded*
 
 Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and the embedded Qdrant store under `data/qdrant/`; both are git-ignored and only the `.sha256` sidecars are committed. In embedded local mode Qdrant searches by brute force and ignores payload indexes; the keyword indexes are declared so the same export works against a server.
 
@@ -19,7 +19,7 @@ Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and t
 
 ## track_a p1
 
-Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.**
+Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
 Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`.
 
@@ -93,7 +93,7 @@ Run manifest `m1_gate_track_a_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957
 
 ## track_a p3
 
-Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.**
+Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
 Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`.
 
