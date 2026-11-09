@@ -56,17 +56,21 @@ def test_custom_k_values(toy, toy_ranks):
     assert metrics.top_k[3] == pytest.approx(5 / 6)
 
 
-def test_single_relevant_identities(toy, toy_ranks):
-    # With exactly one relevant prototype per query, AP == reciprocal rank and
-    # Recall@k == Hit@k (§13.2); both are asserted on the fixture ranks [1,1,1,3,3,4].
-    ranks = rank_of_true_class(toy_ranks, toy["true_class_ids"], toy["class_ids"])
-    ap = average_precision_single_relevant(ranks)
-    np.testing.assert_allclose(ap, 1 / ranks)
-    assert ap.mean() == pytest.approx(toy["expected"]["mrr"])
-    for k in (1, 2, 3, 4):
-        hit_at_k = (ranks <= k).mean()
-        assert recall_at_k_single_relevant(ranks, k) == pytest.approx(hit_at_k)
-    assert recall_at_k_single_relevant(ranks, 3) == pytest.approx(5 / 6)
+def test_single_relevant_ap_and_recall_on_a_five_query_example():
+    # Five queries whose true prototype sits at rank 1, 2, 4, 1 and 3. With one relevant
+    # item per query (§13.2), AP is the precision at that hit: 1/1, 1/2, 1/4, 1/1, 1/3; and
+    # Recall@k is the fraction of queries whose hit is within the first k.
+    true_ranks = np.array([1, 2, 4, 1, 3])
+
+    ap = average_precision_single_relevant(true_ranks)
+
+    np.testing.assert_allclose(ap, [1.0, 0.5, 0.25, 1.0, 0.333333333], rtol=1e-8)
+    assert ap.mean() == pytest.approx(0.616666667)
+    assert recall_at_k_single_relevant(true_ranks, 1) == pytest.approx(0.4)
+    assert recall_at_k_single_relevant(true_ranks, 2) == pytest.approx(0.6)
+    assert recall_at_k_single_relevant(true_ranks, 3) == pytest.approx(0.8)
+    assert recall_at_k_single_relevant(true_ranks, 4) == 1.0
+    assert recall_at_k_single_relevant(true_ranks, 10) == 1.0
 
 
 def test_unknown_true_class_raises(toy, toy_ranks):
