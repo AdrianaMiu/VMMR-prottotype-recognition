@@ -13,6 +13,7 @@ data/paths/
 data/masks/
 *.parquet
 !data/manifests/**/*.parquet
+!data/splits/**/*.parquet
 *.pkl
 *.npy
 *.safetensors

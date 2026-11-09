@@ -79,3 +79,14 @@ def test_dedup_pair_panels_are_ignored_but_the_report_is_not():
         assert is_ignored(panel), "reports/dedup/pairs/ holds CompCars pixels"
     with dummy_file("reports/dedup") as note:
         assert not is_ignored(note), "reports/dedup/ text must be committable"
+
+
+def test_public_split_manifests_are_not_ignored():
+    with dummy_file("data/splits/track_a") as path:
+        parquet = path.with_suffix(".parquet")
+        path.rename(parquet)
+        try:
+            assert not is_ignored(parquet), "data/splits/**/*.parquet must be committable"
+        finally:
+            parquet.rename(path)
+    assert not path.exists()
