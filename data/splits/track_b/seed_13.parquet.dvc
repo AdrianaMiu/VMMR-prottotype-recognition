@@ -1,0 +1,5 @@
+outs:
+- md5: bc39e94be2ff75dd7e938d73aef4ca71
+  size: 5429498
+  hash: md5
+  path: seed_13.parquet

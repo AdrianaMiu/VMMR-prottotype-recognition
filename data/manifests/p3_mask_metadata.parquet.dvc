@@ -1,0 +1,5 @@
+outs:
+- md5: d4c72d46c21f21769355dacdf782ee8b
+  size: 3320213
+  hash: md5
+  path: p3_mask_metadata.parquet

@@ -1,23 +1,33 @@
 """P1 crop geometry (PROTOCOL.md §8).
 
-P1 is the CompCars ground-truth bounding box expanded by 5 % of its own width and height
-on each side and clipped to the image. The crop is never resized here: letterboxing to the
-encoder input (aspect preserved with encoder-specific padding) is the encoder's job. P3
-reuses exactly this geometry so the two variants differ only by masking.
+P1 is the CompCars ground-truth bounding box expanded by ``bbox_expand_fraction`` of its own
+width and height on each side (``configs/preprocessing/p1_bbox_crop.yaml``, the single source
+of that constant: :data:`P1_EXPAND_FRACTION`) and clipped to the image. The crop is never
+resized here: letterboxing to the encoder input (aspect preserved with encoder-specific
+padding) is the encoder's job. P3 reuses exactly this geometry so the two variants differ
+only by masking.
 """
 
 from __future__ import annotations
 
 import math
 
+import yaml
 from PIL import Image
 
+from avr.config import CONFIG_DIR
+
 NEUTRAL_RGB = (127, 127, 127)
+P1_CONFIG = CONFIG_DIR / "preprocessing" / "p1_bbox_crop.yaml"
+P1_EXPAND_FRACTION: float = float(yaml.safe_load(P1_CONFIG.read_text())["bbox_expand_fraction"])
 BoxXYXY = tuple[int, int, int, int]
 
 
 def p1_crop_box(
-    bbox_xyxy: tuple[int, int, int, int], width: int, height: int, expand: float = 0.05
+    bbox_xyxy: tuple[int, int, int, int],
+    width: int,
+    height: int,
+    expand: float = P1_EXPAND_FRACTION,
 ) -> BoxXYXY:
     """Expand ``bbox_xyxy`` by ``expand`` of its size on every side and clip to the image.
 

@@ -7,6 +7,7 @@
   "split_label": "track_b_seed_73",
   "mapping_status": "provisional",
   "mapping_version": "v0.1_provisional",
+  "mask_metadata_sha256": "not_applicable",
   "embedding_store": {
     "encoder": "dinov3_vitb16",
     "revision": "5931719e67bbdb9737e363e781fb0c67687896bc",
@@ -14,7 +15,7 @@
     "preprocessing_id": "dinov3_vit16_224_v1",
     "variant": "p1",
     "dtype": "float16",
-    "directory": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/data/embeddings/dinov3_vitb16/p1",
+    "directory": "../../data/embeddings/dinov3_vitb16/p1",
     "rows": 136365,
     "dimension": 768,
     "shards": 137
@@ -17052,7 +17053,7 @@
     }
   },
   "prototypes": {
-    "parquet": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p1/m0_track_b_seed_73.parquet",
+    "parquet": "data/prototypes/dinov3_vitb16/p1/m0_track_b_seed_73.parquet",
     "parquet_sha256": "e68f9f37c57ee289d2283ca2b2154ab7c4a93a8bc83e8d7ad7feff80e7adc2dd",
     "class_count": 2645,
     "support_counts": {
@@ -17062,7 +17063,7 @@
     }
   },
   "qdrant": {
-    "path": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/qdrant",
+    "path": "data/qdrant",
     "collection": "track_b_seed_73__v0.1_provisional__dinov3_vitb16__dinov3_vit16_224_v1+p1__768__m0_global_mean",
     "point_count": 2645,
     "dimension": 768,
@@ -17112,8 +17113,8 @@
   },
   "run_manifest": {
     "run_id": "m1_gate_track_b_p1_dinov3_vitb16",
-    "git_commit": "e2627197e1f4be645a957a94fff27ad69ee22632",
-    "dirty_worktree_flag": true,
+    "git_commit": "3f13669bc4aa6c5ee9723b8e9231cf970c095732",
+    "dirty_worktree_flag": false,
     "dataset_protocol": "compcars_web:track_b_seed_73",
     "dataset_manifest_hash": "24a158622d01d7df4ec699b54c1469524436846ed715b0886ccb4a95936bd532",
     "split_manifest_hash": "d3af628512ce897be23b61efb9c8ad3b19f8a6e2ee1a566901677dad45960e6a",
@@ -17138,11 +17139,11 @@
       "avr": "0.1.0",
       "torch": "2.7.0+cu126"
     },
-    "start_time": "2026-11-09T11:21:33.678877Z",
-    "end_time": "2026-11-09T11:21:35.299128Z"
+    "start_time": "2026-11-09T14:22:43.785020Z",
+    "end_time": "2026-11-09T14:24:07.225920Z"
   },
-  "runtime_s": 240.92,
-  "peak_rss_mb": 6416.2,
+  "runtime_s": 83.5,
+  "peak_rss_mb": 6430.1,
   "rerun": {
     "repeats": 2,
     "comparisons": [
@@ -17158,12 +17159,12 @@
         "metrics_equal": true,
         "determinism_hashes_equal": true,
         "runtime_s": [
-          240.92,
-          168.78
+          83.5,
+          84.49
         ],
         "peak_rss_mb": [
-          6416.2,
-          7653.7
+          6430.1,
+          7663.4
         ]
       }
     ]

@@ -18,7 +18,8 @@ import pytest
 
 from avr.config import CONFIG_DIR, load_config
 from avr.data.manifest import MANIFEST_NAME
-from avr.pipeline.gate import TRACK_A_SPLIT_LABEL, GateInputs, run_track
+from avr.data.split_identity import TRACK_A_LABEL
+from avr.pipeline.gate import GateInputs, run_track
 
 REPO_ROOT = CONFIG_DIR.parent
 REPORT = REPO_ROOT / "reports" / "m1_gate" / "track_a_p1.json"
@@ -38,7 +39,7 @@ def test_committed_report_is_labelled_as_internal_validation_on_the_official_spl
     report = recorded()
     assert report["article_result"] is False
     assert "not an article result" in report["status"]
-    assert report["split_label"] == TRACK_A_SPLIT_LABEL
+    assert report["split_label"] == TRACK_A_LABEL
     assert report["mapping_status"] == "not_applicable"
     assert report["evaluations"]["official_full"]["class_count"] == 431
     assert report["rerun"]["comparisons"][0]["prototypes_byte_identical"] is True

@@ -9,7 +9,7 @@ Verdict: **PASS**
 
 ## Inputs
 
-- fixture: `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-12-leakage-audit/tests/fixtures/e0_10class`
+- fixture: `tests/fixtures/e0_10class`
 - manifest_slice sha256: `f3daae1176b154132191d7a7177d3dffea7cdc4fa0459cdfb813baf5e9071aa6`
 
 ## Checks

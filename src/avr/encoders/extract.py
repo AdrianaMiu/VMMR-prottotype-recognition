@@ -109,7 +109,8 @@ def run_extraction(
     batch_size: int,
     shard_size: int,
     masks_dir: Path | None = None,
-    expand: float = 0.05,
+    *,
+    expand: float,
     on_shard: Callable[[int, int, ExtractionStats], None] | None = None,
 ) -> ExtractionStats:
     """Embed ``jobs`` shard by shard into ``store``; finished shards are not recomputed."""

@@ -9,14 +9,13 @@ come from configs/splits/track_b.yaml (cross_view).
 Usage: uv run python scripts/build_cross_view_splits.py
 """
 
-import hashlib
 import json
 
 import pandas as pd
 
 from avr.config import CONFIG_DIR, load_config
 from avr.data.cross_view import CrossViewThresholds, build_cross_view_splits
-from avr.data.splits_io import read_sidecar_sha256
+from avr.io import read_sidecar_sha256, sha256_of_file
 
 REPO_ROOT = CONFIG_DIR.parent
 SPLITS = REPO_ROOT / "data" / "splits" / "track_b"
@@ -33,7 +32,7 @@ def main() -> None:
     summary: dict = {"parent_sha256": {}, "class_counts": {}, "partition_counts": {}}
     for seed in [cfg.primary_seed, *cfg.sensitivity_seeds]:
         parent = SPLITS / f"seed_{seed}.parquet"
-        digest = hashlib.sha256(parent.read_bytes()).hexdigest()
+        digest = sha256_of_file(parent)
         if digest != read_sidecar_sha256(parent.with_suffix(".sha256")):
             raise SystemExit(f"{parent} does not match its .sha256 sidecar; rebuild it first")
         result = build_cross_view_splits(

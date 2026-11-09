@@ -17,7 +17,7 @@ import pytest
 from avr.config import CONFIG_DIR, load_config
 from avr.data.manifest import MANIFEST_NAME
 from avr.data.split_track_b import EligibilityThresholds, build_track_b_splits
-from avr.data.splits_io import read_sidecar_sha256
+from avr.io import read_sidecar_sha256
 
 REPO_ROOT = CONFIG_DIR.parent
 MANIFEST = REPO_ROOT / "data" / "manifests" / f"{MANIFEST_NAME}.parquet"

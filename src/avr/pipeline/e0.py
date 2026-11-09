@@ -13,7 +13,6 @@ shuffle, keeping at most one image per duplicate group.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import tempfile
 from collections import Counter
@@ -33,6 +32,7 @@ from avr.encoders.extract import Embedder
 from avr.encoders.store import StoreIdentity, embedding_table, read_embedding_table
 from avr.evaluation.classification import ClassificationMetrics, classification_metrics
 from avr.evaluation.ranking import RankingMetrics, ranking_metrics
+from avr.io import sha256_of_file
 from avr.preprocessing.p3_batch import load_jobs
 from avr.preprocessing.variants import prepare
 from avr.prototypes.m0 import build_global_mean_prototypes
@@ -149,10 +149,6 @@ class FixtureSplitFile(FixtureSplit):
     git_commit: str
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def write_fixture(
     fixture_dir: Path,
     manifest_slice: pa.Table,
@@ -179,7 +175,7 @@ def write_fixture(
     split_file = FixtureSplitFile(
         **split.model_dump(),
         rule=SELECTION_RULE,
-        manifest_slice_sha256=_sha256(fixture_dir / SLICE_NAME),
+        manifest_slice_sha256=sha256_of_file(fixture_dir / SLICE_NAME),
         source_manifest_sha256=source_manifest_sha256,
         embedding_identity=identity,
         git_commit=git_commit,
@@ -196,7 +192,7 @@ def write_fixture(
 def _validate_slice(fixture_dir: Path, split: FixtureSplitFile) -> dict[str, dict]:
     """Columns and checksum of the slice; returns valid rows by image id."""
     path = fixture_dir / SLICE_NAME
-    digest = _sha256(path)
+    digest = sha256_of_file(path)
     if digest != split.manifest_slice_sha256:
         raise ValueError(
             f"{path.name}: sha256 {digest} differs from split.json ({split.manifest_slice_sha256})"
@@ -407,7 +403,8 @@ def build_fixture(
     n_query: int = FIXTURE_QUERY,
     seed: int = FIXTURE_SEED,
     batch_size: int = 32,
-    expand: float = 0.05,
+    *,
+    expand: float,
     tracking_dir: Path | None = None,
 ) -> dict[str, float]:
     """Select the split, embed its P1 crops, write the fixture and record its metrics.
@@ -442,7 +439,7 @@ def build_fixture(
         embeddings=np.vstack(blocks),
         split=split,
         identity=identity,
-        source_manifest_sha256=_sha256(Path(manifest_path)),
+        source_manifest_sha256=sha256_of_file(Path(manifest_path)),
         git_commit=git_commit,
     )
     metrics = run_e0(fixture_dir, tracking_dir=tracking_dir)

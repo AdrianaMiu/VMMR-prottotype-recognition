@@ -44,5 +44,12 @@ Extrapolated to the 136,365 valid images: about 25 min for P1 and about 60 min f
   leaves shard 0 byte-identical (same mtime and sha256) and embeds only the new shard
   (`tests/integration/test_extract_embeddings_resume.py`).
 
+## Provenance of the P3 store
+
 Masks were read from the M1-19 build (`extraction.masks_dir=<that checkout>/data/masks`);
-the metadata used is `data/manifests/p3_mask_metadata.parquet` (first 5,000 images).
+the metadata used is `data/manifests/p3_mask_metadata.parquet` (full run, 136,365 rows,
+sha256 `bb17a917201b43ca4db4aeb748b784b1d7271ca417bd2fd692137d9223d663b8`, see
+`reports/segmentation/README.md`). Every P3 run of the M1 gate verifies that file against
+its `.sha256` sidecar and records the digest as `mask_metadata_sha256` in
+`reports/m1_gate/track_*_p3.json`, as an extra MLflow parameter next to the §17 run
+manifest, and in `reports/m1_gate/README.md`; P1 runs record `not_applicable`.

@@ -4,9 +4,10 @@
   "track": "track_a",
   "variant": "p3",
   "protocol_id": "track_a_official_cvpr2015",
-  "split_label": "official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.",
+  "split_label": "official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded",
   "mapping_status": "not_applicable",
   "mapping_version": "none",
+  "mask_metadata_sha256": "bb17a917201b43ca4db4aeb748b784b1d7271ca417bd2fd692137d9223d663b8",
   "embedding_store": {
     "encoder": "dinov3_vitb16",
     "revision": "5931719e67bbdb9737e363e781fb0c67687896bc",
@@ -14,7 +15,7 @@
     "preprocessing_id": "dinov3_vit16_224_v1",
     "variant": "p3",
     "dtype": "float16",
-    "directory": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/data/embeddings/dinov3_vitb16/p3",
+    "directory": "../../data/embeddings/dinov3_vitb16/p3",
     "rows": 136097,
     "dimension": 768,
     "shards": 137
@@ -2250,7 +2251,7 @@
     }
   },
   "prototypes": {
-    "parquet": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet",
+    "parquet": "data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet",
     "parquet_sha256": "56f0d5d1a691b81f2a87058cddbd283f3ce6f75de1d5ce942d194c0529ac0754",
     "class_count": 431,
     "support_counts": {
@@ -2260,7 +2261,7 @@
     }
   },
   "qdrant": {
-    "path": "/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/qdrant",
+    "path": "data/qdrant",
     "collection": "track_a_official_cvpr2015__none__dinov3_vitb16__dinov3_vit16_224_v1+p3__768__m0_global_mean",
     "point_count": 431,
     "dimension": 768,
@@ -2310,8 +2311,8 @@
   },
   "run_manifest": {
     "run_id": "m1_gate_track_a_p3_dinov3_vitb16",
-    "git_commit": "e2627197e1f4be645a957a94fff27ad69ee22632",
-    "dirty_worktree_flag": true,
+    "git_commit": "3f13669bc4aa6c5ee9723b8e9231cf970c095732",
+    "dirty_worktree_flag": false,
     "dataset_protocol": "compcars_web:track_a_official_cvpr2015",
     "dataset_manifest_hash": "24a158622d01d7df4ec699b54c1469524436846ed715b0886ccb4a95936bd532",
     "split_manifest_hash": "b15490f8418a30cbcd0f91a63ea6640d2a1afd6a968a91699b5f65ef2a50c828",
@@ -2336,11 +2337,11 @@
       "avr": "0.1.0",
       "torch": "2.7.0+cu126"
     },
-    "start_time": "2026-11-09T11:49:12.484534Z",
-    "end_time": "2026-11-09T11:49:27.663515Z"
+    "start_time": "2026-11-09T14:22:15.488402Z",
+    "end_time": "2026-11-09T14:22:27.920270Z"
   },
-  "runtime_s": 15.23,
-  "peak_rss_mb": 2166.5,
+  "runtime_s": 12.49,
+  "peak_rss_mb": 2102.8,
   "rerun": {
     "repeats": 2,
     "comparisons": [
@@ -2356,12 +2357,12 @@
         "metrics_equal": true,
         "determinism_hashes_equal": true,
         "runtime_s": [
-          15.23,
-          12.54
+          12.49,
+          11.65
         ],
         "peak_rss_mb": [
-          2166.5,
-          2504.5
+          2102.8,
+          2476.0
         ]
       }
     ]

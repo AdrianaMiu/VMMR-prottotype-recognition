@@ -72,12 +72,16 @@ def test_rerun_skips_finished_shards_and_only_embeds_the_new_ones(tmp_path: Path
     store = EmbeddingStore(tmp_path / "emb", _identity("p1"))
     encoder = FakeEncoder()
 
-    first = run_extraction(root, jobs[:2], encoder, store, "p1", batch_size=8, shard_size=2)
+    first = run_extraction(
+        root, jobs[:2], encoder, store, "p1", batch_size=8, shard_size=2, expand=0.05
+    )
     assert first.images_embedded == 2 and first.shards_written == [0]
     assert encoder.embedded == 2
     mtime = store.shard_path(0).stat().st_mtime_ns
 
-    second = run_extraction(root, jobs, encoder, store, "p1", batch_size=2, shard_size=2)
+    second = run_extraction(
+        root, jobs, encoder, store, "p1", batch_size=2, shard_size=2, expand=0.05
+    )
 
     assert second.shards_skipped == [0]
     assert second.shards_written == [1, 2]
@@ -94,7 +98,7 @@ def test_p1_crops_are_embedded_at_native_crop_size(tmp_path: Path):
     jobs = _jobs(root, 1)
     encoder = FakeEncoder()
     store = EmbeddingStore(tmp_path / "emb", _identity("p1"))
-    run_extraction(root, jobs, encoder, store, "p1", batch_size=1, shard_size=1)
+    run_extraction(root, jobs, encoder, store, "p1", batch_size=1, shard_size=1, expand=0.05)
     # corner of the P1 crop is an image pixel (red channel 5 +- JPEG noise), not padding
     assert encoder.corner_pixels[0] != (127, 127, 127)
 
@@ -129,7 +133,15 @@ def test_p3_jobs_exclude_failed_or_missing_masks_and_embed_masked_crops(tmp_path
     encoder = FakeEncoder()
     store = EmbeddingStore(tmp_path / "emb", _identity("p3"))
     stats = run_extraction(
-        root, kept, encoder, store, "p3", batch_size=8, shard_size=10, masks_dir=masks_dir
+        root,
+        kept,
+        encoder,
+        store,
+        "p3",
+        batch_size=8,
+        shard_size=10,
+        masks_dir=masks_dir,
+        expand=0.05,
     )
     assert stats.images_embedded == 2
     assert encoder.corner_pixels == [(127, 127, 127), (127, 127, 127)]

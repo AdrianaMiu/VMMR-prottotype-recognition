@@ -1,8 +1,8 @@
 # M1 acceptance gate (issue M1-16, PROTOCOL.md §25 M1)
 
-DINOv3 ViT-B/16 (`configs/encoders/dinov3_vitb16.yaml`), P1 and P3 preprocessing, M0 global-mean prototypes built from support rows only, exact cosine search (matrix multiplication asserted equal to FAISS `IndexFlatIP`), over all 431 Track A classes on the official split and all 2,645 currently eligible Track B classes on seed 73. Built by `scripts/run_m1_gate.py`; this file is rendered from the result JSON files by `scripts/render_m1_gate_readme.py`.
+DINOv3 ViT-B/16 (`configs/encoders/dinov3_vitb16.yaml`), P1 and P3 preprocessing, M0 global-mean prototypes built from support rows only, exact cosine search (matrix multiplication asserted equal to FAISS `IndexFlatIP`), over every Track A class on the official split and the 2,645 currently eligible Track B classes on seed 73. Built by `scripts/run_m1_gate.py`; this file is rendered from the result JSON files by `scripts/render_m1_gate_readme.py`.
 
-**These are internal validation numbers for the M1 gate. They are not article results and must not appear in any article table.** Track B uses the provisional model-year stand-in classes (no approved generation mapping exists yet), so every Track B output is `mapping_status = provisional`. Every Track A output carries the label: *official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.*
+**These are internal validation numbers for the M1 gate. They are not article results and must not appear in any article table.** Track B uses the provisional model-year stand-in classes (no approved generation mapping exists yet), so every Track B output is `mapping_status = provisional`. Every Track A output carries the label: *official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded*
 
 Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and the embedded Qdrant store under `data/qdrant/`; both are git-ignored and only the `.sha256` sidecars are committed. In embedded local mode Qdrant searches by brute force and ignores payload indexes; the keyword indexes are declared so the same export works against a server.
 
@@ -10,18 +10,21 @@ Prototype Parquet tables live under `data/prototypes/<encoder>/<variant>/` and t
 
 | output | artifact |
 |---|---|
-| validated manifest | `data/manifests/compcars_web_images.sha256`, `compcars_web_images.summary.json` (136,726 rows, 136,365 valid; the Parquet is rebuilt by `scripts/build_image_manifest.py` and must match the sidecar) |
-| deduplication report | `reports/dedup/README.md`, `reports/dedup/AUDIT.md` (ADR-0005, pHash distance 2) |
-| split manifests | `data/splits/track_a/official_cvpr2015.parquet` + `.sha256`, `reports/splits/track_a/README.md`; `data/splits/track_b/seed_*.sha256`, `summary.json`, `reports/splits/track_b/eligibility_audit.md`; cross-view `data/splits/track_b/cross_view/` (ADR-0004, ADR-0006) |
+| validated manifest | `data/manifests/compcars_web_images.sha256`, `compcars_web_images.summary.json` (136,726 rows, 136,365 valid; the Parquet is DVC-tracked, rebuilt by `scripts/build_image_manifest.py` and verified against the sidecar by every gate run) |
+| deduplication report | `reports/dedup/README.md`, `reports/dedup/AUDIT.md` (ADR-0005, pHash distance 2; 998 duplicate groups in the manifest summary) |
+| split manifests | `data/splits/track_a/official_cvpr2015.parquet` + `.sha256`, `reports/splits/track_a/README.md`; `data/splits/track_b/seed_*.sha256`, `summary.json` (2,645 eligible classes, 118,070 images), `reports/splits/track_b/eligibility_audit.md`; cross-view eligibility (ADR-0004, ADR-0006): `reports/splits/track_b/cross_view/seed_101.md`, `reports/splits/track_b/cross_view/seed_13.md`, `reports/splits/track_b/cross_view/seed_137.md`, `reports/splits/track_b/cross_view/seed_37.md`, `reports/splits/track_b/cross_view/seed_73.md` |
+| P3 masks | `reports/segmentation/README.md` (136,365 images, mask failure rate 0.20%; metadata sha256 recorded per P3 run below) |
+| embedding extraction | `reports/embeddings/README.md` |
 | initial mapping coverage report | `reports/mapping/v0.1/coverage.md` (queue v0.1, every row `provisional`) |
-| leakage audit on the manifests used | `reports/leakage/track_a.md` (PASS; 52 official-split crossing groups reported, not altered) and `reports/leakage/track_b_seed_73.md` (PASS) |
+| leakage audit on the manifests used | `reports/leakage/e0_fixture.md` (PASS), `reports/leakage/track_a.md` (PASS; 52 official-split crossing groups reported, not altered), `reports/leakage/track_b_cross_view_seed_101.md` (PASS), `reports/leakage/track_b_cross_view_seed_13.md` (PASS), `reports/leakage/track_b_cross_view_seed_137.md` (PASS), `reports/leakage/track_b_cross_view_seed_37.md` (PASS), `reports/leakage/track_b_cross_view_seed_73.md` (PASS), `reports/leakage/track_b_seed_101.md` (PASS), `reports/leakage/track_b_seed_13.md` (PASS), `reports/leakage/track_b_seed_137.md` (PASS), `reports/leakage/track_b_seed_37.md` (PASS), `reports/leakage/track_b_seed_73.md` (PASS) |
+| generation mapping approval | §23 'all Track B generation rows approved': WAIVED, protocol provisional (issue #17); every Track B class is a model-year stand-in with `mapping_status = provisional` |
 | deterministic run | this report: two repeats per track and variant, prototypes and rank matrices byte-identical, embeddings identical (tables below) |
 
 ## track_a p1
 
-Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.**
+Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
-Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`.
+Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_a_p1.json`. P3 mask metadata sha256: `not_applicable`.
 
 ### official_full
 
@@ -79,7 +82,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p1/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `df146806d74b0dbe61d516449f6d36f524fcf2f1b6686b5197cc82b937d4ffe1`
+- Parquet `data/prototypes/dinov3_vitb16/p1/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `df146806d74b0dbe61d516449f6d36f524fcf2f1b6686b5197cc82b937d4ffe1`
 - Qdrant collection `track_a_official_cvpr2015__none__dinov3_vitb16__dinov3_vit16_224_v1+p1__768__m0_global_mean` (431 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 999, equal within score tolerance 1e-05 1, passed: yes
 
@@ -87,15 +90,15 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 16.82 / 15.59 | 2091.8 / 2426.7 |
+| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 13.47 / 11.35 | 2102.2 / 2425.3 |
 
-Run manifest `m1_gate_track_a_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_a_p1_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
 
 ## track_a p3
 
-Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded.**
+Split label: **official CVPR 2015 half/half classification split (30,955 images, 431 models); release version unverified; hashes recorded**
 
-Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`.
+Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_a_p3.json`. P3 mask metadata sha256: `bb17a917201b43ca4db4aeb748b784b1d7271ca417bd2fd692137d9223d663b8`.
 
 ### official_full
 
@@ -153,7 +156,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `56f0d5d1a691b81f2a87058cddbd283f3ce6f75de1d5ce942d194c0529ac0754`
+- Parquet `data/prototypes/dinov3_vitb16/p3/m0_track_a_official_cvpr2015.parquet` (431 prototypes, support count min 10, max 143), sha256 `56f0d5d1a691b81f2a87058cddbd283f3ce6f75de1d5ce942d194c0529ac0754`
 - Qdrant collection `track_a_official_cvpr2015__none__dinov3_vitb16__dinov3_vit16_224_v1+p3__768__m0_global_mean` (431 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 1000, equal within score tolerance 1e-05 0, passed: yes
 
@@ -161,15 +164,15 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 15.23 / 12.54 | 2166.5 / 2504.5 |
+| 1 vs 2 | yes | official_full: yes, validation_fit_only: yes | 0.0e+00 | yes | yes | 12.49 / 11.65 | 2102.8 / 2476.0 |
 
-Run manifest `m1_gate_track_a_p3_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_a_p3_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
 
 ## track_b p1
 
 Split: `track_b_seed_73` (primary seed 73); classes are the provisional model-year stand-ins, every row `mapping_status = provisional`.
 
-Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_b_p1.json`.
+Embedding store: 136,365 rows in 137 shards, dimension 768. Result file: `track_b_p1.json`. P3 mask metadata sha256: `not_applicable`.
 
 ### test
 
@@ -231,7 +234,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p1/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 11, max 101), sha256 `e68f9f37c57ee289d2283ca2b2154ab7c4a93a8bc83e8d7ad7feff80e7adc2dd`
+- Parquet `data/prototypes/dinov3_vitb16/p1/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 11, max 101), sha256 `e68f9f37c57ee289d2283ca2b2154ab7c4a93a8bc83e8d7ad7feff80e7adc2dd`
 - Qdrant collection `track_b_seed_73__v0.1_provisional__dinov3_vitb16__dinov3_vit16_224_v1+p1__768__m0_global_mean` (2645 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 1000, equal within score tolerance 1e-05 0, passed: yes
 
@@ -239,15 +242,15 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 240.92 / 168.78 | 6416.2 / 7653.7 |
+| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 83.5 / 84.49 | 6430.1 / 7663.4 |
 
-Run manifest `m1_gate_track_b_p1_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_b_p1_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.
 
 ## track_b p3
 
 Split: `track_b_seed_73` (primary seed 73); classes are the provisional model-year stand-ins, every row `mapping_status = provisional`.
 
-Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_b_p3.json`.
+Embedding store: 136,097 rows in 137 shards, dimension 768. Result file: `track_b_p3.json`. P3 mask metadata sha256: `bb17a917201b43ca4db4aeb748b784b1d7271ca417bd2fd692137d9223d663b8`.
 
 ### test
 
@@ -309,7 +312,7 @@ Error decomposition (top-1)
 
 ### Persisted prototypes and Qdrant parity
 
-- Parquet `/home/adriana/Desktop/PROIECTE/zsl_car/phd_vmmr/prototype_app/.worktrees/m1-16-gate/data/prototypes/dinov3_vitb16/p3/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 7, max 101), sha256 `3807cf838d4adc2c1b0fc3a07a7bb1df1acb5ccf08155f2070679dc1be563c8a`
+- Parquet `data/prototypes/dinov3_vitb16/p3/m0_track_b_seed_73.parquet` (2645 prototypes, support count min 7, max 101), sha256 `3807cf838d4adc2c1b0fc3a07a7bb1df1acb5ccf08155f2070679dc1be563c8a`
 - Qdrant collection `track_b_seed_73__v0.1_provisional__dinov3_vitb16__dinov3_vit16_224_v1+p3__768__m0_global_mean` (2645 points, embedded local mode)
 - Parity on 1000 queries, top-10: ordered-equal 999, equal within score tolerance 1e-05 1, passed: yes
 
@@ -317,6 +320,6 @@ Error decomposition (top-1)
 
 | repeat | prototypes byte-identical | ranks byte-identical | embeddings max abs diff | Parquet sha256 equal | metrics equal | runtime s | peak RSS MB |
 |---|---|---|---:|---|---|---|---|
-| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 96.46 / 101.62 | 6429.1 / 7677.7 |
+| 1 vs 2 | yes | test: yes, validation: yes | 0.0e+00 | yes | yes | 76.17 / 82.79 | 6435.8 / 7700.5 |
 
-Run manifest `m1_gate_track_b_p3_dinov3_vitb16` at commit `e2627197e1f4be645a957a94fff27ad69ee22632` (dirty worktree: yes); full manifest in the JSON and in the local MLflow store.
+Run manifest `m1_gate_track_b_p3_dinov3_vitb16` at commit `3f13669bc4aa6c5ee9723b8e9231cf970c095732` (dirty worktree: NO); full manifest in the JSON and in the local MLflow store.

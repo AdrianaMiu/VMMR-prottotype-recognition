@@ -13,7 +13,7 @@ Evaluations per track (PROTOCOL.md §5):
 * Track A, ``official_full``: prototypes from every valid image of the official support
   half, queries from the official query half; ``validation_fit_only``: prototypes from the
   ``fit`` partition only, queries from the nested ``validation`` partition. Every output
-  carries :data:`TRACK_A_SPLIT_LABEL`.
+  carries :data:`avr.data.split_identity.TRACK_A_LABEL`.
 * Track B, ``test`` and ``validation``: prototypes from the ``support`` partition, queries
   from the named partition restricted to query-eligible rows (known viewpoint). Classes
   are the provisional model-year stand-ins of the split table, so every output is marked
@@ -37,11 +37,12 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from avr.data.splits_io import read_sidecar_sha256
+from avr.data.split_identity import TRACK_A_LABEL
 from avr.encoders.store import EmbeddingStore
 from avr.evaluation.classification import ClassificationMetrics, classification_metrics
 from avr.evaluation.hierarchy import error_decomposition, parent_ranking_metrics
 from avr.evaluation.ranking import RankingMetrics, ranking_metrics
+from avr.io import read_sidecar_sha256, repo_relative, sha256_of_file
 from avr.pipeline.e0 import PROTOTYPE_METHOD, class_id_of
 from avr.prototypes.m0 import build_global_mean_prototypes
 from avr.prototypes.persist import (
@@ -56,11 +57,6 @@ from avr.tracking.mlflow_run import REPO_ROOT, tracked_run
 
 Track = Literal["track_a", "track_b"]
 
-# The exact label from docs/protocols/track-a-split-identity.md; every Track A table carries it.
-TRACK_A_SPLIT_LABEL = (
-    "official CVPR 2015 half/half classification split (30,955 images, 431 models); "
-    "release version unverified; hashes recorded."
-)
 NOT_AN_ARTICLE_RESULT = (
     "internal validation only (M1 acceptance gate); not an article result and not to be "
     "cited in any article table"
@@ -84,6 +80,7 @@ class GateInputs(BaseModel):
     manifest_path: Path
     split_path: Path
     mapping_queue_path: Path | None
+    mask_metadata_path: Path | None = None
     output_dir: Path
     prototypes_dir: Path
     qdrant_dir: Path
@@ -112,17 +109,17 @@ class GateResult:
 # --- loading -----------------------------------------------------------------------------
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def _sha256_array(array: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
 
 
 def _read_checked(path: Path) -> tuple[pd.DataFrame, str]:
-    """A Parquet table whose ``.sha256`` sidecar must match (fail closed, never silently)."""
-    digest = _sha256(path)
+    """A Parquet table whose ``.sha256`` sidecar must match (fail closed, never silently).
+
+    Used for the image manifest, the split table and the P3 mask metadata alike; every
+    one of them lists each ``image_id`` at most once.
+    """
+    digest = sha256_of_file(path)
     sidecar = path.with_suffix(".sha256")
     if not sidecar.exists():
         raise ValueError(f"{path}: no .sha256 sidecar")
@@ -130,8 +127,17 @@ def _read_checked(path: Path) -> tuple[pd.DataFrame, str]:
         raise ValueError(f"{path}: sha256 {digest} differs from the sidecar {sidecar.name}")
     table = pd.read_parquet(path)
     if table.image_id.duplicated().any():
-        raise ValueError(f"{path}: split table lists an image id more than once")
+        raise ValueError(f"{path}: table lists an image id more than once")
     return table, digest
+
+
+def _mask_metadata_digest(inputs: GateInputs) -> str:
+    """Verified digest of the P3 mask metadata the store was built from; p1 has none."""
+    if inputs.variant != "p3":
+        return "not_applicable"
+    if inputs.mask_metadata_path is None:
+        raise ValueError("variant 'p3' needs mask_metadata_path (data/manifests/p3_mask_metadata)")
+    return _read_checked(inputs.mask_metadata_path)[1]
 
 
 def _load_store(inputs: GateInputs) -> tuple[EmbeddingStore, dict[str, int], np.ndarray]:
@@ -406,11 +412,11 @@ def _parity(
 def run_track(inputs: GateInputs) -> GateResult:
     started = time.perf_counter()
     environment = capture_environment(REPO_ROOT)
-    manifest_digest = _sha256(inputs.manifest_path)
-    manifest = pd.read_parquet(inputs.manifest_path)
+    manifest, manifest_digest = _read_checked(inputs.manifest_path)
+    mask_metadata_digest = _mask_metadata_digest(inputs)
     split, split_digest = _read_checked(inputs.split_path)
     mapping_digest = (
-        _sha256(inputs.mapping_queue_path) if inputs.mapping_queue_path else "not_applicable"
+        sha256_of_file(inputs.mapping_queue_path) if inputs.mapping_queue_path else "not_applicable"
     )
     store, row_of, matrix = _load_store(inputs)
     identity = store.identity
@@ -527,6 +533,7 @@ def run_track(inputs: GateInputs) -> GateResult:
                 run.log_metric(f"{ev_name}/{level}/mrr", metrics["ranking"]["mrr"])
                 run.log_metric(f"{ev_name}/{level}/macro_f1", metrics["classification"]["macro_f1"])
                 run.log_metric(f"{ev_name}/{level}/accuracy", metrics["classification"]["accuracy"])
+        run.log_param("mask_metadata_sha256", mask_metadata_digest)
         run.log_metric("qdrant_parity_queries", parity["queries"])
 
     elapsed = time.perf_counter() - started
@@ -537,20 +544,21 @@ def run_track(inputs: GateInputs) -> GateResult:
         "track": inputs.track,
         "variant": inputs.variant,
         "protocol_id": inputs.protocol_id,
-        "split_label": TRACK_A_SPLIT_LABEL if inputs.track == "track_a" else inputs.protocol_id,
+        "split_label": TRACK_A_LABEL if inputs.track == "track_a" else inputs.protocol_id,
         "mapping_status": "not_applicable" if inputs.track == "track_a" else "provisional",
         "mapping_version": MAPPING_VERSION[inputs.track],
+        "mask_metadata_sha256": mask_metadata_digest,
         "embedding_store": {
             **identity.model_dump(),
-            "directory": str(store.directory),
+            "directory": repo_relative(store.directory),
             "rows": int(matrix.shape[0]),
             "dimension": int(matrix.shape[1]),
             "shards": len(store.finished_shards()),
         },
         "evaluations": outputs,
         "prototypes": {
-            "parquet": str(written.parquet),
-            "parquet_sha256": _sha256(written.parquet),
+            "parquet": repo_relative(written.parquet),
+            "parquet_sha256": sha256_of_file(written.parquet),
             "class_count": table.num_rows,
             "support_counts": {
                 "min": int(primary_support_counts.min()),
@@ -559,7 +567,7 @@ def run_track(inputs: GateInputs) -> GateResult:
             },
         },
         "qdrant": {
-            "path": str(inputs.qdrant_dir),
+            "path": repo_relative(inputs.qdrant_dir),
             **export.model_dump(),
             "parity": parity,
         },
