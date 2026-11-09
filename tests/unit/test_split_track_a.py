@@ -13,9 +13,11 @@ import pytest
 
 from avr.data.split_track_a import (
     OfficialSplit,
+    build_track_a,
     join_official_split,
     partition_validation,
     read_official_split,
+    render_readme,
 )
 
 # image_id, class (make, model), duplicate group, validity. Groups: g1 = {s1, q1} spans
@@ -201,3 +203,52 @@ def test_partition_is_deterministic_for_a_seed_and_moves_with_it():
     assert list(first) == list(again)
     assert (first == "validation").sum() == 8
     assert list(first) != list(other)
+
+
+def test_build_publishes_ids_hashes_labels_and_split_only(manifest, paths, official):
+    build = build_track_a(manifest, paths, official, fraction=0.2, seed=73)
+
+    assert build.table.schema.names == [
+        "image_id",
+        "sha256",
+        "make_id",
+        "model_id",
+        "split_track_a",
+        "track_a_validation",
+    ]
+    frame = build.table.to_pandas()
+    assert list(frame.image_id) == ["q1", "q2", "s1", "s2", "s3", "s4"]
+    assert list(frame.split_track_a) == ["query"] * 2 + ["support"] * 4
+    assert frame.track_a_validation.isna().tolist() == [True, True, False, False, False, True]
+    assert set(frame.track_a_validation.dropna()) <= {"fit", "validation"}
+
+
+def test_build_report_counts_what_the_official_split_does_and_does_not_cover(
+    manifest, paths, official
+):
+    report = build_track_a(manifest, paths, official, fraction=0.2, seed=73).report
+
+    assert report.listed == {"support": 4, "query": 3}
+    assert report.matched == {"support": 4, "query": 2}
+    assert report.missing == {"support": 0, "query": 1}
+    assert report.unlisted_images == 1
+    assert report.classes == {"support": 2, "query": 2}
+    assert report.excluded == {"support": 1, "query": 0}
+    assert report.cross_split_groups == 1
+    assert report.cross_split_images == 2
+    assert report.validation_fraction == 0.2
+    assert report.validation_seed == 73
+    # class (1, 10) has two units {s1} and {s2, s3}; exactly one unit is held out
+    assert report.partition in ({"fit": 2, "validation": 1}, {"fit": 1, "validation": 2})
+    assert report.classes_with_validation == 1
+
+
+def test_readme_reports_counts_and_never_a_path(manifest, paths, official):
+    report = build_track_a(manifest, paths, official, fraction=0.2, seed=73).report
+
+    text = render_readme(report)
+
+    assert "| support | 4 | 4 | 0 |" in text
+    assert "| query | 3 | 2 | 1 |" in text
+    assert "1 duplicate group" in text and "2 images" in text
+    assert "2010" not in text and ".jpg" not in text
