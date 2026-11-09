@@ -25,3 +25,14 @@ the prototype table. Settings come from `AVR_*` environment variables (`avr.serv
 run locally with `uv run uvicorn avr.service.app:create_app --factory` and build the image with
 `docker/Dockerfile.service`. Cosine similarities are similarities, never probabilities;
 `calibrated_confidence` and `viewpoint` are `null` until those components exist.
+
+### Demo UI
+
+`uv sync --extra gpu --extra demo`, then `uv run python -m avr.service.demo --host 127.0.0.1 --port 7860`
+opens a Gradio page that runs the same `RecognitionPipeline` in-process (profiles come from
+`profiles.yaml`, so new profiles appear automatically). Pick one or more profiles to compare
+their top-k labels per detected vehicle; the page also shows the annotated image, per-stage
+latency and index versions. `--examples-dir DIR` adds local photos as examples,
+`--log-session PATH` appends JSON lines (timestamp, profile, vehicles, top-1), `--api-url URL`
+uses a running API instead of loading models. The CompCars examples in
+`tests/fixtures/demo/examples.json` are image ids resolved through the private path table.

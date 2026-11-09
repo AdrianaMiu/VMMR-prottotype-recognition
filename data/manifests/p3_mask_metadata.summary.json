@@ -1,12 +1,12 @@
 {
-  "row_count": 5000,
+  "row_count": 136365,
   "mask_status_counts": {
-    "low_overlap": 3,
-    "no_detection": 7,
-    "ok": 4990
+    "low_overlap": 45,
+    "no_detection": 223,
+    "ok": 136097
   },
   "mask_failure_rate": 0.002,
-  "gt_iou_mean_ok": 0.9791,
+  "gt_iou_mean_ok": 0.9789,
   "mask_area_fraction_mean_ok": 0.6094,
-  "detection_score_mean": 0.9066
+  "detection_score_mean": 0.9062
 }
