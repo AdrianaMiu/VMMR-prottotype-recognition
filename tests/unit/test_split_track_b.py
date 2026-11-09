@@ -345,3 +345,53 @@ def test_build_writes_one_public_table_and_sidecar_per_seed_with_no_paths(tmp_pa
     digest = hashlib.sha256((tmp_path / "splits" / "seed_73.parquet").read_bytes()).hexdigest()
     assert (tmp_path / "splits" / "seed_73.sha256").read_text() == f"{digest}  seed_73.parquet\n"
     assert result.partition_counts[73] == {"support": 36, "validation": 12, "test": 12}
+
+
+def test_cross_class_duplicate_groups_are_excluded_before_eligibility_and_audited(tmp_path):
+    """ADR-0006: a duplicate group spanning two classes leaves Track B with all its images."""
+    import pyarrow.parquet as pq
+
+    from avr.data.split_track_b import build_track_b_splits, exclude_cross_class_duplicates
+
+    spec = [
+        # group xg: one photo filed under two model-year classes
+        ("x1", 1, 10, 2011, 1, "xg", "valid"),
+        ("x2", 1, 11, 2011, 1, "xg", "valid"),
+        # group yg: three images, two classes
+        ("y1", 1, 10, 2011, 2, "yg", "valid"),
+        ("y2", 1, 10, 2011, 2, "yg", "valid"),
+        ("y3", 1, 11, 2011, 2, "yg", "valid"),
+        # group zg: two images, one class: stays
+        ("z1", 1, 10, 2011, 3, "zg", "valid"),
+        ("z2", 1, 10, 2011, 3, "zg", "valid"),
+        # an excluded row never makes its group cross-class
+        ("w1", 2, 20, 2011, 3, "zg", "excluded"),
+    ]
+    manifest = pd.concat([eligible_manifest(), manifest_rows(spec)], ignore_index=True)
+
+    pool, excluded = exclude_cross_class_duplicates(with_provisional_classes(manifest))
+    assert excluded.reason == "cross_class_duplicate"
+    assert (excluded.groups, excluded.images, excluded.group_ids) == (2, 5, ["xg", "yg"])
+    assert sorted(set(pool["image_id"]) & {"x1", "x2", "y1", "y2", "y3", "z1", "z2", "w1"}) == [
+        "z1",
+        "z2",
+    ]
+
+    result = build_track_b_splits(
+        manifest,
+        THRESHOLDS,
+        FRACTIONS,
+        seeds=[73],
+        audit_path=tmp_path / "audit.md",
+        out_dir=tmp_path / "splits",
+    )
+
+    assert result.audit.cross_class.groups == 2 and result.audit.cross_class.images == 5
+    assert result.audit.images_before == 60 + 6 + 2  # 68 valid rows, the 5 excluded ones gone
+    frame = pq.read_table(tmp_path / "splits" / "seed_73.parquet").to_pandas()
+    assert len(frame) == 62
+    assert not frame["image_id"].isin(["x1", "x2", "y1", "y2", "y3"]).any()
+    text = (tmp_path / "audit.md").read_text()
+    assert "| cross_class_duplicate | 2 | 5 |" in text
+    assert text.index("cross_class_duplicate") < text.index("## Rules in protocol order")
+    assert "`xg`, `yg`" in text

@@ -1,32 +1,32 @@
 {
   "manifest_sha256": "24a158622d01d7df4ec699b54c1469524436846ed715b0886ccb4a95936bd532",
-  "eligible_classes": 2651,
-  "eligible_images": 118586,
+  "eligible_classes": 2645,
+  "eligible_images": 118070,
   "partition_counts": {
     "73": {
-      "support": 71197,
-      "validation": 24002,
-      "test": 23387
+      "support": 70880,
+      "validation": 23909,
+      "test": 23281
     },
     "13": {
-      "support": 71184,
-      "validation": 23999,
-      "test": 23403
+      "support": 70878,
+      "validation": 23905,
+      "test": 23287
     },
     "37": {
-      "support": 71167,
-      "validation": 23992,
-      "test": 23427
+      "support": 70849,
+      "validation": 23890,
+      "test": 23331
     },
     "101": {
-      "support": 71176,
-      "validation": 24022,
-      "test": 23388
+      "support": 70863,
+      "validation": 23922,
+      "test": 23285
     },
     "137": {
-      "support": 71177,
-      "validation": 24010,
-      "test": 23399
+      "support": 70862,
+      "validation": 23898,
+      "test": 23310
     }
   }
 }

@@ -13,8 +13,11 @@ Columns (opaque ids and hashes only, no paths; ADR-0002): `image_id`, `sha256`,
 `class_id`, `make_id`, `model_id`, `viewpoint`, `partition` (`support`, `validation`,
 `test`), `mapping_status`. `class_id` is the provisional model-year stand-in
 `make_id/model_id/year` and `mapping_status` is `provisional` until approved
-generation-mapping rows exist. Every `source_group_id` group of the image manifest lies
-in one partition. Images with the uncertain viewpoint `-1` are split like the others but
+generation-mapping rows exist. Before eligibility, every image whose `duplicate_group_id`
+spans more than one class is excluded with reason `cross_class_duplicate` (ADR-0006); the
+groups and images removed are counted at the top of the eligibility audit. Every
+`source_group_id` group of the image manifest lies in one partition. Images with the
+uncertain viewpoint `-1` are split like the others but
 are not query-eligible; filter on `viewpoint` for query sets and for the cross-view
 condition (ADR-0004).
 
