@@ -11,9 +11,9 @@ because no same-source series are known yet.
 ## Settings
 
 - phash_hash_size: 8
-- phash_hamming_threshold: 6
+- phash_hamming_threshold: 2
 - images: 136726 (with a pHash: 136726)
-- runtime of the full build including hashing: 227 s
+- runtime of the full build including hashing: 209 s
 
 ## Counts
 
@@ -21,13 +21,13 @@ because no same-source series are known yet.
 |---|---|
 | exact-duplicate groups (same sha256) | 52 |
 | images in exact-duplicate groups | 104 |
-| near-duplicate groups (at least one pHash link between distinct bytes) | 2545 |
-| images in near-duplicate groups | 6652 |
-| duplicate groups of size >= 2 (exact or near) | 2593 |
-| images in those groups | 6748 |
-| largest group size | 695 |
-| groups spanning more than one make/model (label noise evidence) | 628 |
-| groups spanning more than one make | 470 |
+| near-duplicate groups (at least one pHash link between distinct bytes) | 948 |
+| images in near-duplicate groups | 1965 |
+| duplicate groups of size >= 2 (exact or near) | 998 |
+| images in those groups | 2065 |
+| largest group size | 6 |
+| groups spanning more than one make/model (label noise evidence) | 142 |
+| groups spanning more than one make | 26 |
 
 ## Hamming-distance histogram (unordered pHash pairs)
 
@@ -58,26 +58,11 @@ threshold show the tail that is not.
 
 | group size | groups |
 |---|---|
-| 2 | 2315 |
-| 3 | 164 |
-| 4 | 53 |
-| 5 | 16 |
-| 6 | 16 |
-| 7 | 9 |
-| 8 | 3 |
-| 9 | 2 |
-| 10 | 1 |
-| 12 | 1 |
-| 13 | 1 |
-| 14 | 1 |
-| 17 | 2 |
-| 19 | 1 |
-| 21 | 1 |
-| 23 | 1 |
-| 34 | 3 |
-| 83 | 1 |
-| 107 | 1 |
-| 695 | 1 |
+| 2 | 950 |
+| 3 | 31 |
+| 4 | 14 |
+| 5 | 2 |
+| 6 | 1 |
 
 ## Sensitivity to the threshold
 
@@ -89,14 +74,11 @@ configured one.
 | 0 | 595 | 1199 | 4 | 116 |
 | 1 | 595 | 1199 | 4 | 116 |
 | 2 | 998 | 2065 | 6 | 142 |
-| 3 | 998 | 2065 | 6 | 142 |
-| 4 | 1625 | 3504 | 28 | 276 |
-| 5 | 1625 | 3504 | 28 | 276 |
-| 6 | 2593 | 6748 | 695 | 628 |
 
 ## Visual audit near the threshold
 
-`near_threshold_pairs.csv` lists every pair at distance threshold or threshold-1 with the
-make/model of each side; 50 of them, spread evenly over the list, are
+`near_threshold_pairs.csv` lists every pHash pair within the threshold (the pairs that
+create near links) with the make/model of each side, sorted by distance;
+50 of them, spread evenly over the list, are
 exported as side-by-side JPEG panels under `pairs/` (git-ignored: CompCars
 pixels are never committed). The `panel` column names the file when one exists.
