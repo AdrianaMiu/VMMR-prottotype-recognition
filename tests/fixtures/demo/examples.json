@@ -1,0 +1,12 @@
+{
+  "description": "CompCars Track A query images (split_track_a == query) shown as demo examples; image_id only, resolved through the private path table at runtime.",
+  "image_ids": [
+    "db340d6102a492db",
+    "59d241232a099ba1",
+    "28458c69fbeb75a0",
+    "542b7b258e85d2f7",
+    "88df53cae5adf290",
+    "70edd3dcff266b61",
+    "a5525a9922fae3fa"
+  ]
+}
