@@ -82,6 +82,7 @@ class ServiceResources:
         self.segmenter: Segmenter | None = None
         self.encoders: dict[str, Embedder] = {}
         self.backends: dict[str, SearchBackend] = {}
+        self._qdrant_client = None
 
     @property
     def ready(self) -> bool:
@@ -109,7 +110,16 @@ class ServiceResources:
     def _backend(self, profile: Profile) -> SearchBackend:
         if self.settings.search_backend == "exact":
             return ExactSearch.from_parquet(profile.prototype_path)
-        return EmbeddedQdrantSearch(Path(self.settings.qdrant_dir), profile.collection)
+        backend = EmbeddedQdrantSearch(
+            Path(self.settings.qdrant_dir), profile.collection, client=self._qdrant_client
+        )
+        self._qdrant_client = backend.client  # one embedded client per process, shared
+        return backend
+
+    def close(self) -> None:
+        if self._qdrant_client is not None:
+            self._qdrant_client.close()
+            self._qdrant_client = None
 
     def pipeline_for(self, profile: Profile) -> RecognitionPipeline:
         if not self.ready:
@@ -202,6 +212,7 @@ def create_app(
         resources.load()
         log.info("service ready: %s", resources.versions())
         yield
+        resources.close()
 
     app = FastAPI(title="AVR recognition service", version=avr.__version__, lifespan=lifespan)
     app.state.resources = resources

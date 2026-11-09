@@ -14,6 +14,7 @@ A Qdrant server backend (``url`` mode) plugs in through the same protocol.
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, runtime_checkable
@@ -22,7 +23,6 @@ import numpy as np
 import pyarrow as pa
 
 from avr.prototypes.persist import PAYLOAD_COLUMNS, read_prototype_table
-from avr.retrieval import qdrant_store
 from avr.retrieval.exact import rank_by_cosine
 
 INT_PAYLOAD_FIELDS = frozenset({"make_id", "model_id", "year", "support_count", "dimension"})
@@ -88,15 +88,44 @@ class ExactSearch:
 
 
 class EmbeddedQdrantSearch:
-    """Top-k from an embedded local Qdrant collection (``avr.retrieval.qdrant_store``)."""
+    """Top-k from an embedded local Qdrant collection, exact in embedded mode.
 
-    def __init__(self, path: Path, collection: str) -> None:
+    The embedded store admits one client per process, and opening one loads the collection
+    from disk (hundreds of milliseconds), so the client is opened once and kept; several
+    backends on the same store share it through ``client``. ``close`` releases the directory.
+    """
+
+    def __init__(self, path: Path, collection: str, client=None) -> None:
         self.path = Path(path)
         self.collection = collection
+        self._client = client
+
+    @property
+    def client(self):
+        if self._client is None:
+            from qdrant_client import QdrantClient
+
+            self._client = QdrantClient(path=str(self.path))
+        return self._client
+
+    def close(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
 
     def search(self, queries: np.ndarray, k: int) -> list[list[Hit]]:
+        from qdrant_client import models
+
         queries = np.ascontiguousarray(queries, dtype=np.float32)
         if queries.shape[0] == 0:
             return []
-        rows = qdrant_store.query_top_k(self.path, self.collection, queries, int(k))
-        return [[Hit(h.class_id, h.score, _native(h.payload)) for h in row] for row in rows]
+        requests = [
+            models.QueryRequest(query=q.tolist(), limit=int(k), with_payload=True) for q in queries
+        ]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            responses = self.client.query_batch_points(self.collection, requests=requests)
+        return [
+            [Hit(p.payload["class_id"], float(p.score), _native(p.payload)) for p in r.points]
+            for r in responses
+        ]

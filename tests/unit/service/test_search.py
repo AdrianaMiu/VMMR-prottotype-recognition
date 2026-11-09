@@ -74,3 +74,17 @@ def test_batched_queries_return_one_row_per_query(backends):
 def test_exact_search_reports_size_and_dimension(backends):
     exact, _ = backends
     assert exact.size == 5 and exact.dimension == 5
+
+
+def test_embedded_backends_can_share_one_client_and_close_it(five_prototype_files):
+    first = EmbeddedQdrantSearch(five_prototype_files["qdrant"], FIVE_COLLECTION)
+    second = EmbeddedQdrantSearch(
+        five_prototype_files["qdrant"], FIVE_COLLECTION, client=first.client
+    )
+    assert second.client is first.client
+    assert [h.class_id for h in second.search(_unit([0, 1, 0, 0, 0])[None, :], 1)[0]] == ["c1"]
+    first.close()
+    # a fresh client can open the store again once the shared one is closed
+    third = EmbeddedQdrantSearch(five_prototype_files["qdrant"], FIVE_COLLECTION)
+    assert [h.class_id for h in third.search(_unit([0, 0, 1, 0, 0])[None, :], 1)[0]] == ["c2"]
+    third.close()
