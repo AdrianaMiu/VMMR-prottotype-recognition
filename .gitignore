@@ -39,3 +39,6 @@ reports/dedup/pairs/
 
 # derived embeddings (resumable per-shard store, PROTOCOL.md §9)
 data/embeddings/
+
+# M1 gate outputs: persisted prototypes and the embedded Qdrant store (sha256 sidecars are committed)
+data/qdrant/

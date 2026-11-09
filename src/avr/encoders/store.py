@@ -80,6 +80,19 @@ class EmbeddingStore:
         self.identity = identity
         self.directory = self.root / identity.encoder / identity.variant
 
+    @classmethod
+    def from_directory(cls, root: Path, encoder: str, variant: str) -> EmbeddingStore:
+        """Open an existing store, taking its identity from the first finished shard."""
+        directory = Path(root) / encoder / variant
+        manifests = sorted(directory.glob("shard_*.json"))
+        if not manifests:
+            raise FileNotFoundError(f"{directory}: no shard manifest found")
+        shard = ShardManifest.model_validate_json(manifests[0].read_text())
+        identity = StoreIdentity.model_validate(shard.model_dump())
+        if identity.encoder != encoder or identity.variant != variant:
+            raise ValueError(f"{directory}: shard identity {identity} does not match the path")
+        return cls(root, identity)
+
     # --- paths ---------------------------------------------------------------------------
 
     def shard_path(self, index: int) -> Path:

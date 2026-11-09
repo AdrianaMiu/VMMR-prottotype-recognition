@@ -55,7 +55,8 @@ def is_ignored(path: Path) -> bool:
 
 
 @pytest.mark.parametrize(
-    "relative_dir", ["data/paths", "data/external", "data/masks", "data/embeddings"]
+    "relative_dir",
+    ["data/paths", "data/external", "data/masks", "data/embeddings", "data/qdrant"],
 )
 def test_path_table_and_external_data_are_ignored(relative_dir: str):
     with dummy_file(relative_dir) as path:
@@ -89,4 +90,18 @@ def test_public_split_manifests_are_not_ignored():
             assert not is_ignored(parquet), "data/splits/**/*.parquet must be committable"
         finally:
             parquet.rename(path)
+    assert not path.exists()
+
+
+def test_prototype_parquet_is_ignored_but_its_sidecar_is_not():
+    with dummy_file("data/prototypes/toy/p1") as path:
+        parquet = path.with_suffix(".parquet")
+        sidecar = path.with_suffix(".sha256")
+        path.rename(parquet)
+        try:
+            assert is_ignored(parquet), "data/prototypes/**/*.parquet must be git-ignored"
+            parquet.rename(sidecar)
+            assert not is_ignored(sidecar), "prototype .sha256 sidecars must be committable"
+        finally:
+            (sidecar if sidecar.exists() else parquet).rename(path)
     assert not path.exists()
