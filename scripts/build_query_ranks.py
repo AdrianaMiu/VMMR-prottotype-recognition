@@ -50,7 +50,7 @@ def parquet_bytes(table: pd.DataFrame) -> bytes:
 
 def _update_cmc(path: Path, new: pd.DataFrame) -> None:
     keys = ["track", "encoder", "variant"]
-    old = pd.read_csv(path) if path.exists() else new.iloc[0:0]
+    old = pd.read_csv(path, float_precision="round_trip") if path.exists() else new.iloc[0:0]
     drop = old.set_index(keys).index.isin(new.set_index(keys).index.unique())
     merged = pd.concat([old[~drop], new], ignore_index=True)
     merged = merged.sort_values([*keys, "k"]).reset_index(drop=True)
