@@ -38,7 +38,7 @@ class RunManifest(BaseModel):
     preprocessing_id: str | None = None
     dimension_transform_id: str | None = None
     prototype_method: str | None = None
-    support_k: int | None = None
+    support_k: int | str | None = None  # an integer K, or "full" for every support image
     seed: int | None = None
     hardware: dict[str, str | None] | None = None
     software_versions: dict[str, str] | None = None

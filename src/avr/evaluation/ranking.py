@@ -65,16 +65,14 @@ def recall_at_k_single_relevant(true_ranks: np.ndarray, k: int) -> float:
     return float((np.asarray(true_ranks) <= k).mean())
 
 
-def ranking_metrics(
-    ranks: np.ndarray,
-    true_class_ids: Sequence[str],
-    class_ids: Sequence[str],
+def summarise_true_ranks(
+    true_ranks: np.ndarray,
+    class_count: int,
     ks: Sequence[int] = DEFAULT_KS,
     tied_queries: int | None = None,
 ) -> RankingMetrics:
-    """Top-k, MRR, mean/median/percentile rank and normalised rank from a rank matrix."""
-    true_ranks = rank_of_true_class(ranks, true_class_ids, class_ids)
-    class_count = len(class_ids)
+    """Top-k, MRR, mean/median/percentile rank and normalised rank from one-based true ranks."""
+    true_ranks = np.asarray(true_ranks)
     normalised = (
         (true_ranks - 1) / (class_count - 1)
         if class_count > 1
@@ -93,3 +91,15 @@ def ranking_metrics(
         rank_p95=float(np.percentile(true_ranks, 95)),
         mean_normalised_rank=float(np.mean(normalised)),
     )
+
+
+def ranking_metrics(
+    ranks: np.ndarray,
+    true_class_ids: Sequence[str],
+    class_ids: Sequence[str],
+    ks: Sequence[int] = DEFAULT_KS,
+    tied_queries: int | None = None,
+) -> RankingMetrics:
+    """Top-k, MRR, mean/median/percentile rank and normalised rank from a rank matrix."""
+    true_ranks = rank_of_true_class(ranks, true_class_ids, class_ids)
+    return summarise_true_ranks(true_ranks, len(class_ids), ks, tied_queries)
