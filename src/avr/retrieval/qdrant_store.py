@@ -28,6 +28,7 @@ import numpy as np
 import pyarrow as pa
 from pydantic import BaseModel, ConfigDict
 
+from avr.io import read_fixed_list_matrix
 from avr.prototypes.persist import PAYLOAD_COLUMNS
 
 KEYWORD_FIELDS: tuple[str, ...] = PAYLOAD_COLUMNS
@@ -151,10 +152,8 @@ def export_prototypes(
     """(Re)create ``collection`` on ``target`` from a prototype table."""
     from qdrant_client import models
 
-    column = table.column("embedding").combine_chunks()
-    dim = int(column.type.list_size)
-    vectors = np.asarray(column.values.to_numpy(zero_copy_only=False), dtype=np.float32)
-    vectors = vectors.reshape(table.num_rows, dim)
+    vectors = read_fixed_list_matrix(table, "embedding")
+    dim = int(vectors.shape[1])
     payloads = _payloads(table)
 
     client = _client(target)

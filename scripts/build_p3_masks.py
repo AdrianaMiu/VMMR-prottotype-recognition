@@ -5,6 +5,8 @@ with the private path table, writes one PNG mask per image under data/masks/ (gi
 and one Parquet shard per ``--shard-size`` images under data/masks/_shards/; rerunning skips
 finished shards. The shards are merged into data/manifests/p3_mask_metadata.{parquet,sha256,
 summary.json}.
+The low-overlap threshold (``min_iou``) and the P1 expansion come from the configs, never from
+the command line.
 Usage: uv run python scripts/build_p3_masks.py [--limit N] [--shard-size 1000] [--batch-size 16]
 """
 
@@ -30,7 +32,6 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="first N valid images only")
     parser.add_argument("--shard-size", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=None, help="default: config value")
-    parser.add_argument("--min-iou", type=float, default=0.5)
     args = parser.parse_args()
 
     cfg = load_config()
@@ -67,7 +68,7 @@ def main() -> None:
         shard_size=args.shard_size,
         batch_size=args.batch_size or int(cfg.segmentation.batch_size),
         expand=float(cfg.preprocessing.bbox_expand_fraction),
-        min_iou=args.min_iou,
+        min_iou=float(cfg.segmentation.min_iou),
         on_shard=on_shard,
     )
     elapsed = time.perf_counter() - started

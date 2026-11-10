@@ -69,22 +69,51 @@ DVC is initialised in the repository (`.dvc/config`, `.dvcignore` are tracked; `
 and `.dvc/tmp/` are ignored). Settings:
 
 - `core.analytics = false`
-- cache: the DVC default `.dvc/cache` under the repository (git-ignored); no remote is configured yet
+- cache: the DVC default `.dvc/cache` under the repository (git-ignored); no remote is configured
 
 What is DVC-tracked and when:
 
 - Small JSON records under `data/manifests/` (for example
-  `data/manifests/track_a_split_identity.json`) stay in git: they are a few kilobytes and must
-  be reviewable in diffs.
-- Parquet manifests under `data/manifests/` (the dataset manifest, split manifests and the
-  generation mapping once they exist, PROTOCOL.md §5-§6 and ADR-0002) are added with
-  `uv run dvc add data/manifests/<name>.parquet`. That commits the `<name>.parquet.dvc`
-  pointer file (md5 of the content) to git and places the bytes in `.dvc/cache`. The
-  `dataset_manifest_hash`, `split_manifest_hash` and `generation_mapping_hash` fields of the run
-  manifest are the SHA-256 of the Parquet bytes, recorded independently of DVC's md5.
-- Derived artifacts (embedding caches, prototype tables) follow the same rule once they are
-  produced.
-- Image data is never added to DVC or git (CompCars licence, PROTOCOL.md §17).
+  `data/manifests/track_a_split_identity.json`, the `*.summary.json` files) and every
+  `.sha256` sidecar stay in git: they are a few kilobytes and must be reviewable in diffs.
+- Parquet tables larger than the 2 MB commit limit are owned by DVC. `uv run dvc add <file>`
+  writes the `<file>.dvc` pointer (md5 of the content) next to the file; the pointer is
+  committed, the bytes go to `.dvc/cache`. DVC adds a per-directory `.gitignore` entry only
+  for a file git does not already ignore; the root rule below ignores every Parquet, so none
+  is written. Currently DVC-tracked:
+  - `data/manifests/compcars_web_images.parquet` (public image manifest);
+  - `data/manifests/p3_mask_metadata.parquet` (P3 mask metadata, full run);
+  - `data/splits/track_b/seed_<s>.parquet` and `data/splits/track_b/cross_view/seed_<s>/view_<v>.parquet`;
+  - `data/prototypes/<encoder>/<variant>/*.parquet` (M1 gate prototype tables).
+  The private path table `data/paths/compcars_web_image_paths.parquet` is **never** added to
+  DVC or git (ADR-0002); it is rebuilt from the dataset by `scripts/build_image_manifest.py`.
+  `data/splits/track_a/official_cvpr2015.parquet` is under 2 MB and stays in git.
+- The root `.gitignore` ignores `*.parquet` and re-allows only
+  `data/splits/track_a/*.parquet` and `tests/fixtures/**`, so a DVC-owned Parquet is ignored
+  by git while its `.dvc` pointer and `.sha256` sidecar are not (`.dvc/` itself is re-allowed
+  by `!/.dvc/` after the `/.*/` rule). `tests/unit/test_gitignore_policy.py` asks git itself.
+- Prototype tables are written by the M1 gate (`scripts/run_m1_gate.py`) and added with
+  `uv run dvc add data/prototypes/<encoder>/<variant>/*.parquet` after each gate run; their
+  `.sha256` sidecars stay in git.
+- The `dataset_manifest_hash`, `split_manifest_hash` and `generation_mapping_hash` fields of
+  the run manifest are the SHA-256 of the Parquet bytes (the `.sha256` sidecars), recorded
+  independently of DVC's md5. The M1 gate verifies every table it reads against its sidecar.
+- Image data, masks and embedding shards are never added to DVC or git (CompCars licence,
+  PROTOCOL.md §17); embeddings are rebuilt by `scripts/extract_embeddings.py`.
 
 To restore tracked files on a fresh clone with the same cache: `uv run dvc checkout`. A remote
 (`dvc remote add`) will be configured when a second machine needs the files.
+
+## Run manifest fields that do not apply
+
+Every §17 field is required before a metric is logged, so a run that has no value for a
+field records an explicit placeholder rather than `null`:
+
+- `not_applicable` (string) for `split_manifest_hash`, `generation_mapping_hash` and
+  `prototype_method` of an extraction run (`scripts/extract_embeddings.py`), and for
+  `generation_mapping_hash` of a Track A gate run (Track A has no generation mapping);
+- `support_k = 0` for an extraction run (no support set exists) and `support_k = "full"` for a
+  gate run that builds prototypes from every support image;
+- Inputs outside the §17 list (for example the P3 `mask_metadata_sha256`) are logged as extra
+  MLflow parameters (`TrackedRun.log_param`) and written into the result JSON, never into the
+  manifest model, whose fields are exactly the §17 list.

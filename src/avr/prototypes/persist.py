@@ -10,7 +10,6 @@ Parquet file in ``sha256sum`` format, like the split manifests (ADR-0002).
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -19,6 +18,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import BaseModel, ConfigDict
+
+from avr.io import read_fixed_list_matrix, write_sha256_sidecar
 
 PAYLOAD_COLUMNS = (
     "make_id",
@@ -135,15 +136,10 @@ def write_prototype_table(table: pa.Table, path: Path) -> PrototypeTableOutputs:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(table, path, compression="zstd")
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    sidecar = path.with_suffix(".sha256")
-    sidecar.write_text(f"{digest}  {path.name}\n")
-    return PrototypeTableOutputs(parquet=path, sha256=sidecar)
+    return PrototypeTableOutputs(parquet=path, sha256=write_sha256_sidecar(path))
 
 
 def read_prototype_table(path: Path) -> tuple[pa.Table, np.ndarray]:
     """The stored table and its ``[C, dim]`` float32 prototype matrix in row order."""
     table = pq.read_table(path)
-    column = table.column("embedding").combine_chunks()
-    matrix = np.asarray(column.values.to_numpy(zero_copy_only=False), dtype=np.float32)
-    return table, matrix.reshape(table.num_rows, column.type.list_size)
+    return table, read_fixed_list_matrix(table, "embedding")

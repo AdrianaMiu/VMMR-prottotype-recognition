@@ -10,7 +10,6 @@ publication discipline as the image manifest).
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections import Counter
 from collections.abc import Callable
@@ -21,7 +20,8 @@ import pyarrow.parquet as pq
 from PIL import Image
 from pydantic import BaseModel
 
-from avr.preprocessing.p3 import DEFAULT_MIN_IOU, build_p3, mask_path, save_mask
+from avr.io import write_sha256_sidecar
+from avr.preprocessing.p3 import build_p3, mask_path, save_mask
 from avr.segmentation.base import Segmenter
 
 METADATA_NAME = "p3_mask_metadata"
@@ -74,9 +74,10 @@ def run_shard(
     segmenter: Segmenter,
     masks_dir: Path,
     batch_size: int,
-    expand: float = 0.05,
-    min_iou: float = DEFAULT_MIN_IOU,
+    expand: float,
+    min_iou: float,
 ) -> list[dict]:
+    """``expand`` and ``min_iou`` come from the configs; callers thread them explicitly."""
     rows = []
     for start in range(0, len(jobs), batch_size):
         chunk = jobs[start : start + batch_size]
@@ -106,8 +107,8 @@ def run_batch(
     shards_dir: Path,
     shard_size: int,
     batch_size: int,
-    expand: float = 0.05,
-    min_iou: float = DEFAULT_MIN_IOU,
+    expand: float,
+    min_iou: float,
     on_shard: Callable[[int, int, int], None] | None = None,
 ) -> list[Path]:
     """Process ``jobs`` shard by shard; shards whose Parquet already exists are skipped."""
@@ -161,7 +162,6 @@ def merge_shards(shards_dir: Path, manifests_dir: Path) -> MetadataOutputs:
         summary=manifests_dir / f"{METADATA_NAME}.summary.json",
     )
     pq.write_table(table, out.metadata, compression="zstd")
-    digest = hashlib.sha256(out.metadata.read_bytes()).hexdigest()
-    out.sha256.write_text(f"{digest}  {out.metadata.name}\n")
+    write_sha256_sidecar(out.metadata)
     out.summary.write_text(json.dumps(summarise(table.to_pylist()), indent=2) + "\n")
     return out

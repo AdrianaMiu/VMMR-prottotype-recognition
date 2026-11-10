@@ -20,8 +20,8 @@ preprocessing:
 dtype: float16
 checkpoint_file: open_clip_model.safetensors
 checkpoint_sha256: 0084e75319a50ad85ef45377bad5bc38f2f58824459eb690048d51c9f8863be5
-verified_at: '2026-11-06T14:50:02Z'
-verified_dtype: float32
+verified_at: '2026-11-09T14:13:49Z'
+verified_dtype: float16
 verified_output_shape:
 - 1
 - 1024

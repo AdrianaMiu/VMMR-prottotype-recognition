@@ -42,6 +42,10 @@ class TrackedRun:
             )
         mlflow.log_metric(name, value, step=step, run_id=self.mlflow_run_id)
 
+    def log_param(self, name: str, value: str) -> None:
+        """An input outside the §17 list (for example a mask-metadata digest)."""
+        mlflow.MlflowClient().log_param(self.mlflow_run_id, name, value)
+
 
 def _manifest_json(manifest: RunManifest) -> str:
     return json.dumps(manifest.model_dump(mode="json"), indent=2, sort_keys=False)

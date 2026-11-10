@@ -18,7 +18,6 @@ private ``image_id -> relative_path`` table under ``data/paths/``. Rows are sort
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
@@ -32,6 +31,7 @@ from pydantic import BaseModel
 
 from avr.data.labels import parse_label
 from avr.data.names import NameTables, load_name_tables
+from avr.io import sha256_of_file, write_sha256_sidecar
 
 NAME_MAT = Path("misc") / "make_model_name.mat"
 IMAGE_DIR = "image"
@@ -140,7 +140,7 @@ def _hash_and_measure(args: tuple[str, str]) -> tuple[str, int | None, int | Non
     """Worker: SHA-256 of the file bytes and the pixel size read from the JPEG header."""
     root, relative_path = args
     path = Path(root) / relative_path
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    digest = sha256_of_file(path)
     try:
         with Image.open(path) as image:
             width, height = image.size
@@ -263,7 +263,6 @@ def write_manifest(rows: list[ImageRow], manifests_dir: Path, paths_dir: Path) -
     )
     pq.write_table(public, out.manifest, compression="zstd")
     pq.write_table(private, out.paths, compression="zstd")
-    digest = hashlib.sha256(out.manifest.read_bytes()).hexdigest()
-    out.sha256.write_text(f"{digest}  {out.manifest.name}\n")
+    write_sha256_sidecar(out.manifest)
     out.summary.write_text(json.dumps(summarise(rows), indent=2) + "\n")
     return out

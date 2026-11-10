@@ -25,8 +25,8 @@ from avr.encoders.verify import (
     Encode,
     resolve_checkpoint,
     select_loader,
-    sha256_of_file,
 )
+from avr.io import sha256_of_file
 
 
 class FrozenEncoder:

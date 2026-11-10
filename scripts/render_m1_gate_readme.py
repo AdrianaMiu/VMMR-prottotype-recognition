@@ -13,7 +13,7 @@ GATE_DIR = CONFIG_DIR.parent / "reports" / "m1_gate"
 def main() -> None:
     paths = sorted(GATE_DIR.glob("track_*_p*.json"))
     readme = GATE_DIR / "README.md"
-    readme.write_text(render_from_files(paths))
+    readme.write_text(render_from_files(paths, CONFIG_DIR.parent))
     print(f"wrote {readme} from {len(paths)} result file(s)")
 
 

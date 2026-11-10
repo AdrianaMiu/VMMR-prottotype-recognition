@@ -9,6 +9,7 @@ prototypes_dir: data/prototypes
 qdrant_dir: data/qdrant
 output_dir: reports/m1_gate
 mapping_queue: data/mappings/generation_mapping_queue_v0.1.csv
+mask_metadata: data/manifests/p3_mask_metadata.parquet   # P3 runs record its sha256
 parity_queries: 1000
 repeats: 2
 splits:

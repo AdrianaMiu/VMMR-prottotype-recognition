@@ -9,12 +9,13 @@ ever written here.
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 from pydantic import BaseModel
+
+from avr.io import write_sha256_sidecar
 
 
 class SplitManifestOutputs(BaseModel):
@@ -26,12 +27,4 @@ def write_split_manifest(table: pa.Table, path: Path) -> SplitManifestOutputs:
     """Write ``table`` to ``path`` and its SHA-256 to ``path.with_suffix('.sha256')``."""
     path.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(table, path, compression="zstd")
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    sidecar = path.with_suffix(".sha256")
-    sidecar.write_text(f"{digest}  {path.name}\n")
-    return SplitManifestOutputs(manifest=path, sha256=sidecar)
-
-
-def read_sidecar_sha256(sidecar: Path) -> str:
-    """The hex digest recorded in a ``sha256sum``-style sidecar."""
-    return sidecar.read_text().split()[0]
+    return SplitManifestOutputs(manifest=path, sha256=write_sha256_sidecar(path))

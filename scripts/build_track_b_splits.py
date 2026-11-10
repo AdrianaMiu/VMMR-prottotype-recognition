@@ -8,7 +8,6 @@ the partition sizes. Thresholds, fractions and seeds come from configs/splits/tr
 Usage: uv run python scripts/build_track_b_splits.py
 """
 
-import hashlib
 import json
 
 import pandas as pd
@@ -16,7 +15,7 @@ import pandas as pd
 from avr.config import CONFIG_DIR, load_config
 from avr.data.manifest import MANIFEST_NAME
 from avr.data.split_track_b import EligibilityThresholds, build_track_b_splits
-from avr.data.splits_io import read_sidecar_sha256
+from avr.io import read_sidecar_sha256, sha256_of_file
 
 REPO_ROOT = CONFIG_DIR.parent
 MANIFEST = REPO_ROOT / "data" / "manifests" / f"{MANIFEST_NAME}.parquet"
@@ -26,7 +25,7 @@ OUT_DIR = REPO_ROOT / "data" / "splits" / "track_b"
 
 def main() -> None:
     cfg = load_config().split_track_b
-    manifest_digest = hashlib.sha256(MANIFEST.read_bytes()).hexdigest()
+    manifest_digest = sha256_of_file(MANIFEST)
     if manifest_digest != read_sidecar_sha256(MANIFEST.with_suffix(".sha256")):
         raise SystemExit(f"{MANIFEST} does not match its .sha256 sidecar; rebuild it first")
 

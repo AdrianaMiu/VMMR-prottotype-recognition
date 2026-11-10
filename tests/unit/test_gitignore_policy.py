@@ -89,26 +89,48 @@ def test_dedup_pair_panels_are_ignored_but_the_report_is_not():
         assert not is_ignored(note), "reports/dedup/ text must be committable"
 
 
-def test_public_split_manifests_are_not_ignored():
-    with dummy_file("data/splits/track_a") as path:
-        parquet = path.with_suffix(".parquet")
-        path.rename(parquet)
-        try:
-            assert not is_ignored(parquet), "data/splits/**/*.parquet must be committable"
-        finally:
-            parquet.rename(path)
-    assert not path.exists()
+def _renamed(relative_dir: str, suffix: str):
+    """Context manager yielding a dummy file renamed to ``suffix`` inside ``relative_dir``."""
+
+    @contextmanager
+    def manager() -> Iterator[Path]:
+        with dummy_file(relative_dir) as path:
+            target = path.with_name(path.name.replace(".tmp", suffix))
+            path.rename(target)
+            try:
+                yield target
+            finally:
+                target.rename(path)
+
+    return manager()
 
 
-def test_prototype_parquet_is_ignored_but_its_sidecar_is_not():
-    with dummy_file("data/prototypes/toy/p1") as path:
-        parquet = path.with_suffix(".parquet")
-        sidecar = path.with_suffix(".sha256")
-        path.rename(parquet)
-        try:
-            assert is_ignored(parquet), "data/prototypes/**/*.parquet must be git-ignored"
-            parquet.rename(sidecar)
-            assert not is_ignored(sidecar), "prototype .sha256 sidecars must be committable"
-        finally:
-            (sidecar if sidecar.exists() else parquet).rename(path)
-    assert not path.exists()
+def test_the_official_track_a_table_stays_in_git():
+    with _renamed("data/splits/track_a", ".parquet") as parquet:
+        assert not is_ignored(parquet), "data/splits/track_a/*.parquet is under 2 MB and committed"
+
+
+@pytest.mark.parametrize(
+    "relative_dir",
+    [
+        "data/manifests",
+        "data/splits/track_b",
+        "data/splits/track_b/cross_view/seed_1",
+        "data/prototypes/toy/p1",
+    ],
+)
+def test_dvc_owns_the_large_parquet_tables(relative_dir: str):
+    with _renamed(relative_dir, ".parquet") as parquet:
+        assert is_ignored(parquet), f"{relative_dir}/*.parquet belongs to DVC, not git"
+    with _renamed(relative_dir, ".parquet.dvc") as pointer:
+        assert not is_ignored(pointer), "the .dvc pointer file must be committable"
+    with _renamed(relative_dir, ".sha256") as sidecar:
+        assert not is_ignored(sidecar), "sha256 sidecars must be committable"
+
+
+def test_fixture_parquet_and_the_dvc_config_stay_committable():
+    with _renamed("tests/fixtures/e0_10class", ".parquet") as parquet:
+        assert not is_ignored(parquet)
+    assert not is_ignored(REPO_ROOT / ".dvc" / "config")
+    assert not is_ignored(REPO_ROOT / ".dvcignore")
+    assert is_ignored(REPO_ROOT / ".dvc" / "cache" / "x")

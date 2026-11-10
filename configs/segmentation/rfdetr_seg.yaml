@@ -18,5 +18,6 @@ checkpoint:
   md5: a49af1562c3719227ad43d0ca53b4c7a
   sha256: 3ad325094735f431aee9962a8d204d68eb5bfc393d53e7e836e70998fef5ea58
 threshold: 0.3              # detection confidence kept; instance selection is by GT-box IoU
+min_iou: 0.5                # selected box IoU against the GT box below this -> mask_status low_overlap
 labels: [car, truck, bus]   # COCO vehicle classes kept
 batch_size: 16

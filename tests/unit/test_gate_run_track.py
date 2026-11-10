@@ -17,11 +17,13 @@ import pyarrow.parquet as pq
 import pytest
 
 from avr.data.manifest import PUBLIC_SCHEMA
+from avr.data.split_identity import TRACK_A_LABEL
 from avr.data.split_track_a import PUBLIC_SCHEMA as TRACK_A_SCHEMA
 from avr.data.split_track_b import OUTPUT_SCHEMA as TRACK_B_SCHEMA
 from avr.data.splits_io import write_split_manifest
 from avr.encoders.store import EmbeddingStore, StoreIdentity
-from avr.pipeline.gate import TRACK_A_SPLIT_LABEL, GateInputs, run_track
+from avr.io import write_sha256_sidecar
+from avr.pipeline.gate import GateInputs, run_track
 from avr.prototypes.persist import read_prototype_table
 
 IDENTITY = StoreIdentity(
@@ -59,11 +61,29 @@ def manifest_row(image_id: str, make: int, model: int, year: int, viewpoint: int
     }
 
 
-def write_store(root: Path, vectors: dict[str, list[float]]) -> None:
+def write_store(root: Path, vectors: dict[str, list[float]], variant: str = "p1") -> None:
     ids = sorted(vectors)
-    EmbeddingStore(root, IDENTITY).write_shard(
+    identity = IDENTITY.model_copy(update={"variant": variant})
+    EmbeddingStore(root, identity).write_shard(
         0, ids, np.array([vectors[i] for i in ids], dtype=np.float32)
     )
+
+
+# support: A on x, B on y, C on z (fit and validation copies identical).
+# queries: qa1 = x -> A (rank 1); qa2 = (0, .9, .1) -> B (A at rank 3, make 1 at rank 1);
+# qc1 = (.1, 0, .9) -> C (rank 1). qm has no embedding; qx is excluded.
+TRACK_A_VECTORS = {
+    "a1": X,
+    "a2": X,
+    "b1": Y,
+    "b2": Y,
+    "c1": Z,
+    "c2": Z,
+    "qa1": X,
+    "qa2": unit(0.0, 0.9, 0.1),
+    "qc1": unit(0.1, 0.0, 0.9),
+    "qx": X,
+}
 
 
 @pytest.fixture
@@ -104,6 +124,7 @@ def track_a(common: dict) -> GateInputs:
     rows[-2]["exclusion_reason"] = "degenerate_bbox"
     manifest = tmp / "manifest.parquet"
     pq.write_table(pa.Table.from_pylist(rows, schema=PUBLIC_SCHEMA), manifest)
+    write_sha256_sidecar(manifest)
 
     def split_row(image_id: str, make: int, model: int, side: str, part: str | None) -> dict:
         return {
@@ -132,24 +153,7 @@ def track_a(common: dict) -> GateInputs:
         schema=TRACK_A_SCHEMA,
     )
     split_path = write_split_manifest(split, tmp / "track_a" / "official_cvpr2015.parquet").manifest
-    # support: A on x, B on y, C on z (fit and validation copies identical).
-    # queries: qa1 = x -> A (rank 1); qa2 = (0, .9, .1) -> B (A at rank 3, make 1 at rank 1);
-    # qc1 = (.1, 0, .9) -> C (rank 1). qm has no embedding; qx is excluded.
-    write_store(
-        tmp / "emb",
-        {
-            "a1": X,
-            "a2": X,
-            "b1": Y,
-            "b2": Y,
-            "c1": Z,
-            "c2": Z,
-            "qa1": X,
-            "qa2": unit(0.0, 0.9, 0.1),
-            "qc1": unit(0.1, 0.0, 0.9),
-            "qx": X,
-        },
-    )
+    write_store(tmp / "emb", TRACK_A_VECTORS)
     return GateInputs(
         track="track_a",
         variant="p1",
@@ -169,7 +173,8 @@ def test_track_a_metrics_match_the_hand_calculation(track_a: GateInputs):
     r = result.results
 
     assert r["article_result"] is False
-    assert r["split_label"] == TRACK_A_SPLIT_LABEL
+    assert r["split_label"] == TRACK_A_LABEL
+    assert not r["split_label"].endswith(".")
     assert r["mapping_status"] == "not_applicable"
     full = r["evaluations"]["official_full"]
     assert full["support_images"] == 6
@@ -270,6 +275,57 @@ def test_tampered_split_sidecar_is_rejected(track_a: GateInputs):
         run_track(track_a)
 
 
+def test_tampered_manifest_sidecar_is_rejected(track_a: GateInputs):
+    track_a.manifest_path.with_suffix(".sha256").write_text("0" * 64 + "  x\n")
+    with pytest.raises(ValueError, match="sha256"):
+        run_track(track_a)
+
+
+def test_manifest_without_sidecar_is_rejected(track_a: GateInputs):
+    track_a.manifest_path.with_suffix(".sha256").unlink()
+    with pytest.raises(ValueError, match="sidecar"):
+        run_track(track_a)
+
+
+def test_p1_records_no_mask_metadata(track_a: GateInputs):
+    assert run_track(track_a).results["mask_metadata_sha256"] == "not_applicable"
+
+
+def test_result_paths_are_repo_relative(track_a: GateInputs):
+    r = run_track(track_a).results
+    recorded = (r["prototypes"]["parquet"], r["qdrant"]["path"], r["embedding_store"]["directory"])
+    for value in recorded:
+        assert not Path(value).is_absolute(), value
+        assert "/home/" not in value, value
+    # the tmp_path inputs lie outside the repository, so the records climb out of it
+    assert r["prototypes"]["parquet"].endswith("toy/p1/m0_track_a_official_cvpr2015.parquet")
+
+
+def test_p3_needs_mask_metadata_and_records_its_verified_digest(track_a: GateInputs):
+    import mlflow
+
+    p3 = track_a.model_copy(update={"variant": "p3"})
+    with pytest.raises(ValueError, match="mask_metadata_path"):
+        run_track(p3)
+
+    metadata = track_a.manifest_path.parent / "p3_mask_metadata.parquet"
+    pq.write_table(pa.table({"image_id": ["a1"], "mask_status": ["ok"]}), metadata)
+    p3 = track_a.model_copy(update={"variant": "p3", "mask_metadata_path": metadata})
+    with pytest.raises(ValueError, match="sidecar"):
+        run_track(p3)
+
+    write_sha256_sidecar(metadata)
+    write_store(track_a.embeddings_dir, TRACK_A_VECTORS, variant="p3")
+    r = run_track(p3).results
+    digest = hashlib.sha256(metadata.read_bytes()).hexdigest()
+    assert r["variant"] == "p3"
+    assert r["mask_metadata_sha256"] == digest
+
+    client = mlflow.MlflowClient(tracking_uri=track_a.tracking_dir.as_uri())
+    runs = client.search_runs([client.get_experiment_by_name("avr").experiment_id])
+    assert [run.data.params["mask_metadata_sha256"] for run in runs] == [digest]
+
+
 # --- Track B ---------------------------------------------------------------------------
 
 
@@ -291,6 +347,7 @@ def track_b(common: dict) -> GateInputs:
     ]
     manifest = tmp / "manifest.parquet"
     pq.write_table(pa.Table.from_pylist(rows, schema=PUBLIC_SCHEMA), manifest)
+    write_sha256_sidecar(manifest)
 
     def split_row(image_id: str, cls: str, make: int, model: int, part: str, view: int = 1):
         return {

@@ -10,7 +10,6 @@ step 3): DINOv3 ``pooler_output`` (CLS token after the final norm), SigLIP2
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,6 +20,7 @@ from PIL import Image
 from pydantic import BaseModel
 
 from avr.encoders.registry import EncoderSpec, TorchDtype
+from avr.io import sha256_of_file
 
 TORCH_DTYPES: dict[TorchDtype, torch.dtype] = {
     "float16": torch.float16,
@@ -42,14 +42,6 @@ class VerificationResult(BaseModel):
     device: str
     dtype: TorchDtype
     verified_at: datetime
-
-
-def sha256_of_file(path: Path, chunk_size: int = 1 << 22) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(chunk_size), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _count_parameters(*modules: torch.nn.Module) -> int:
@@ -114,12 +106,20 @@ def _load_clip(spec, revision, device, dtype):
     return encode, parameters, type(processor).__name__
 
 
+OPEN_CLIP_PRECISION = {torch.float16: "fp16", torch.bfloat16: "bf16", torch.float32: "fp32"}
+
+
+def open_clip_precision(dtype: torch.dtype) -> str:
+    """open_clip's ``precision`` option for a torch dtype (it ignores torch's own spelling)."""
+    return OPEN_CLIP_PRECISION[dtype]
+
+
 def _load_open_clip(spec, revision, device, dtype):
     import open_clip
 
     model_name = spec.preprocessing.model_dump()["open_clip_model"]
     model, _, preprocess = open_clip.create_model_and_transforms(
-        model_name, pretrained=revision, device=device, precision=str(dtype).removeprefix("torch.")
+        model_name, pretrained=revision, device=device, precision=open_clip_precision(dtype)
     )
     model.eval()
 

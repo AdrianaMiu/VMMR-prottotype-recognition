@@ -18,14 +18,24 @@ from pathlib import Path
 from typing import Literal
 
 import numpy as np
+import yaml
 from PIL import Image
 
-from avr.preprocessing.crop import NEUTRAL_RGB, BoxXYXY, crop_with_padding, p1_crop_box
+from avr.config import CONFIG_DIR
+from avr.preprocessing.crop import (
+    NEUTRAL_RGB,
+    P1_EXPAND_FRACTION,
+    BoxXYXY,
+    crop_with_padding,
+    p1_crop_box,
+)
 from avr.segmentation.base import Instance
 
 MaskStatus = Literal["ok", "no_detection", "low_overlap"]
 MASK_STATUSES: tuple[MaskStatus, ...] = ("ok", "no_detection", "low_overlap")
-DEFAULT_MIN_IOU = 0.5
+SEGMENTATION_CONFIG = CONFIG_DIR / "segmentation" / "rfdetr_seg.yaml"
+# The one source of the low-overlap threshold; scripts read the same key through Hydra.
+DEFAULT_MIN_IOU: float = float(yaml.safe_load(SEGMENTATION_CONFIG.read_text())["min_iou"])
 
 
 @dataclass(frozen=True)
@@ -73,7 +83,7 @@ def build_p3(
     image: Image.Image,
     gt_bbox: tuple[int, int, int, int],
     instances: list[Instance],
-    expand: float = 0.05,
+    expand: float = P1_EXPAND_FRACTION,
     min_iou: float = DEFAULT_MIN_IOU,
     background: tuple[int, int, int] = NEUTRAL_RGB,
 ) -> P3Result:
