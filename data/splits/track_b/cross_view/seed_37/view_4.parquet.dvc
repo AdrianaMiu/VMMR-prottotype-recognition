@@ -1,0 +1,5 @@
+outs:
+- md5: c4df19205dee3be9caf98b1321bf79dd
+  size: 2938908
+  hash: md5
+  path: view_4.parquet

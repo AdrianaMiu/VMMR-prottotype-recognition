@@ -1,0 +1,6 @@
+# Local MLflow file store (ADR-0002). `tracking_dir` is relative to the repository root and
+# git-ignored; `avr.tracking.mlflow_run.tracked_run` resolves it.
+name: local
+backend: local_file
+tracking_dir: mlruns
+experiment_name: avr

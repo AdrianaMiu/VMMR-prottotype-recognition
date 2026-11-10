@@ -1,0 +1,151 @@
+{
+  "seed": 73,
+  "class_ids": [
+    "054_0196",
+    "077_0127",
+    "078_0024",
+    "081_0068",
+    "081_0070",
+    "111_1706",
+    "122_0590",
+    "140_1181",
+    "157_1915",
+    "157_1917"
+  ],
+  "support": {
+    "054_0196": [
+      "44c6072ce46b5b42",
+      "5c8d9451ef46d4ab",
+      "76189c1c2742bc9d",
+      "940e7dcf255f2f2f",
+      "ab72cf1d3b1381b9"
+    ],
+    "077_0127": [
+      "379d044f74fa5da7",
+      "d102fef443419b30",
+      "e1e2637e28217778",
+      "e63a8c40aa54b5db",
+      "fe265653a66b7f61"
+    ],
+    "078_0024": [
+      "115cdd1e8a11f473",
+      "381a54e4a0deba09",
+      "cb14afd6b7a1a193",
+      "e68fef9f0ffac5f4",
+      "e6da833b13e33bfa"
+    ],
+    "081_0068": [
+      "0da35609ebd529c7",
+      "9b80dd61a92a0ca9",
+      "ad18232ee6d0531b",
+      "ad996dcbc42e2786",
+      "d459b57f12f0db5e"
+    ],
+    "081_0070": [
+      "20476b7ba6f12a23",
+      "944a60612c067663",
+      "b7057e325e1d217f",
+      "dce4fa2284fe7a8a",
+      "ed3cdd5f64c9f1aa"
+    ],
+    "111_1706": [
+      "4b24718afca45ce1",
+      "5f049a42c85c888f",
+      "8cc95bf8e4afdebf",
+      "ade452579a53d109",
+      "ece30250b174fc15"
+    ],
+    "122_0590": [
+      "12b25fb2d6785145",
+      "336c388f93c98516",
+      "474eb33c4278c8c7",
+      "e103c5927adf7305",
+      "f7007c03d56b806b"
+    ],
+    "140_1181": [
+      "0238e844a977da31",
+      "58c702ca995e91de",
+      "5b53c3587d9d2e92",
+      "91bf35c548633d15",
+      "d8782aa580efe490"
+    ],
+    "157_1915": [
+      "334c0c7cfb8963c7",
+      "40d93917655d986d",
+      "6acc15a9e2b2cee0",
+      "7a6e4dcae5db541e",
+      "f1bb256b108f0edd"
+    ],
+    "157_1917": [
+      "0db1590fe3c73aac",
+      "22bc7c432ae441c8",
+      "386f6f9758d33f63",
+      "46075c611c25f102",
+      "c08ffd55add0a657"
+    ]
+  },
+  "query": {
+    "054_0196": [
+      "37bed7d18305bcd7",
+      "43e5b4969fbd9e10",
+      "ff0bc7ecba1c39b5"
+    ],
+    "077_0127": [
+      "4f75b017dd72e09a",
+      "586c3adfe8d88138",
+      "83d3452e29dc2c3c"
+    ],
+    "078_0024": [
+      "0cd111e4ce3ff6de",
+      "8e274a73211e8c9c",
+      "ac40f865c0b98fc2"
+    ],
+    "081_0068": [
+      "38d3baf4bd460bdf",
+      "69c4d405f0945e70",
+      "fa111da58d1ba2e0"
+    ],
+    "081_0070": [
+      "0730704decab5fd2",
+      "6ea84193c0e2bec4",
+      "70535a46111a1e33"
+    ],
+    "111_1706": [
+      "110d190adad30292",
+      "50c48884c6583d7a",
+      "94d7b638a273642c"
+    ],
+    "122_0590": [
+      "35ac263913481ed2",
+      "ead48cdcffcb5647",
+      "f6511996c8f1648d"
+    ],
+    "140_1181": [
+      "15842bd58a184c81",
+      "7c9e3d59b4229cb3",
+      "a1f253efbcf6688b"
+    ],
+    "157_1915": [
+      "d71b357df754b606",
+      "f2898649ff1deac6",
+      "f689b86b7e0349ea"
+    ],
+    "157_1917": [
+      "07241510bfd4675a",
+      "0bb830bb65c57437",
+      "c0c1e55d5885c308"
+    ]
+  },
+  "rule": "fixture-only split, not the Track A official split: the classes with the most valid images, then per class a shuffle of the sorted image ids with numpy default_rng(seed), at most one image per duplicate_group_id, first n_support images as support and the next n_query as query",
+  "manifest_slice_sha256": "f3daae1176b154132191d7a7177d3dffea7cdc4fa0459cdfb813baf5e9071aa6",
+  "source_manifest_sha256": "24a158622d01d7df4ec699b54c1469524436846ed715b0886ccb4a95936bd532",
+  "embedding_identity": {
+    "encoder": "dinov3_vitb16",
+    "revision": "5931719e67bbdb9737e363e781fb0c67687896bc",
+    "checkpoint_sha256": "9a21ac3df0c63839d62612dda6f454d816c25611cc7a52966ed5a5a94921dc8b",
+    "preprocessing_id": "dinov3_vit16_224_v1",
+    "variant": "p1",
+    "dtype": "float16"
+  },
+  "git_commit": "3ac2bcccbb6ea8015257fd01b7632ef6708734e5"
+}

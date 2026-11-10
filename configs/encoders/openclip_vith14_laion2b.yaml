@@ -1,0 +1,27 @@
+# OpenCLIP ViT-H/14 baseline (PROTOCOL.md §9), loaded with open_clip (model ViT-H-14,
+# pretrained tag laion2b_s32b_b79k); revision is the pretrained tag. Pooled output is
+# encode_image: the image projection, 1024-D. Verification fields are written by
+# scripts/verify_encoder_registry.py; do not edit them by hand.
+name: openclip_vith14_laion2b
+model_id: laion/CLIP-ViT-H-14-laion2B-s32B-b79K
+source: open_clip
+revision: laion2b_s32b_b79k
+license: MIT
+parameter_count: 632076800
+input_resolution: 224
+native_dim: 1024
+pooling: projection
+preprocessing:
+  id: openclip_vith14_224_v1
+  open_clip_model: ViT-H-14
+  resize_shortest_edge: 224
+  center_crop: 224
+  processor: open_clip:ViT-H-14
+dtype: float16
+checkpoint_file: open_clip_model.safetensors
+checkpoint_sha256: 0084e75319a50ad85ef45377bad5bc38f2f58824459eb690048d51c9f8863be5
+verified_at: '2026-11-09T14:13:49Z'
+verified_dtype: float16
+verified_output_shape:
+- 1
+- 1024

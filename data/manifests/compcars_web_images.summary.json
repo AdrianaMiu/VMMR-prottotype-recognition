@@ -1,0 +1,21 @@
+{
+  "row_count": 136726,
+  "valid_count": 136365,
+  "exclusion_reason_counts": {
+    "degenerate_bbox": 10,
+    "invalid_year_folder": 8,
+    "unknown_year": 343
+  },
+  "viewpoint_counts": {
+    "-1": 780,
+    "1": 18431,
+    "2": 13513,
+    "3": 23551,
+    "4": 49301,
+    "5": 31150
+  },
+  "make_count": 163,
+  "model_count": 1716,
+  "duplicate_group_count": 998,
+  "duplicate_image_count": 2065
+}

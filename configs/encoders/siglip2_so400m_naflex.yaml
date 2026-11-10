@@ -1,3 +1,26 @@
-# SigLIP2 primary per ADR-0003. Registry fields are completed and verified in issue #5.
+# SigLIP2 primary per ADR-0003: so400m NaFlex at its native 1152-D. Pooled output is the
+# vision tower's attention-pool head (transformers pooler_output). input_resolution is the
+# square-equivalent side of the fixed max_num_patches budget (256 patches of 16 px).
+# Verification fields are written by scripts/verify_encoder_registry.py.
 name: siglip2_so400m_naflex
 model_id: google/siglip2-so400m-patch16-naflex
+source: huggingface
+revision: cc24074f717b612951c2dead130904ab9b65a81e
+license: Apache-2.0
+parameter_count: 427888064
+input_resolution: 256
+native_dim: 1152
+pooling: attention_pool
+preprocessing:
+  id: siglip2_naflex_256patches_v1
+  max_num_patches: 256
+  patch_size: 16
+  processor: Siglip2ImageProcessor
+dtype: float16
+checkpoint_file: model.safetensors
+checkpoint_sha256: 11a61a2068800d5f4f35cb041c1fea25de86ce87725e4c97a9ed046d0b22c076
+verified_at: '2026-11-09T14:12:29Z'
+verified_dtype: float16
+verified_output_shape:
+- 1
+- 1152

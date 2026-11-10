@@ -1,0 +1,25 @@
+# DINOv3 primary candidate (PROTOCOL.md §9 primary table). Pooled output is the CLS token
+# after the final layer norm (transformers pooler_output). Verification fields are written
+# by scripts/verify_encoder_registry.py; do not edit them by hand.
+name: dinov3_vitl16
+model_id: facebook/dinov3-vitl16-pretrain-lvd1689m
+source: huggingface
+revision: ea8dc2863c51be0a264bab82070e3e8836b02d51
+license: DINOv3 License (Meta, research and commercial use with conditions)
+parameter_count: 303129600
+input_resolution: 224
+native_dim: 1024
+pooling: cls
+preprocessing:
+  id: dinov3_vit16_224_v1
+  resize_shortest_edge: 256
+  center_crop: 224
+  processor: DINOv3ViTImageProcessor
+dtype: float16
+checkpoint_file: model.safetensors
+checkpoint_sha256: dcb2e45127cccbf1601e5f42fef165eea275c8e5213197e8dcf3f48822718179
+verified_at: '2026-11-09T14:11:49Z'
+verified_dtype: float16
+verified_output_shape:
+- 1
+- 1024

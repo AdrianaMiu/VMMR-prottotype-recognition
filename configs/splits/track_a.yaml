@@ -1,0 +1,7 @@
+# Track A: official CVPR 2015 half/half classification split (PROTOCOL.md §5 Track A).
+# The nested validation partition is carved out of the support half, class-stratified and
+# group-aware on duplicate_group_id; fraction and seed are fixed here so the partition is
+# reproducible from the published manifest alone.
+name: official_cvpr2015
+validation_fraction: 0.2
+validation_seed: 73

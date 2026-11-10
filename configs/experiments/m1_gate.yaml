@@ -1,0 +1,17 @@
+# M1 acceptance gate (issue M1-16, PROTOCOL.md §25 M1): one encoder, M0 prototypes, exact
+# search over Track A (official split) and Track B (seed 73, provisional mapping). Paths are
+# relative to the repository root unless absolute; `embeddings_dir` may point at another
+# checkout's finished store (read only). Every number produced is internal validation only.
+name: m1_gate
+prototype_method: m0_global_mean
+embeddings_dir: data/embeddings
+prototypes_dir: data/prototypes
+qdrant_dir: data/qdrant
+output_dir: reports/m1_gate
+mapping_queue: data/mappings/generation_mapping_queue_v0.1.csv
+mask_metadata: data/manifests/p3_mask_metadata.parquet   # P3 runs record its sha256
+parity_queries: 1000
+repeats: 2
+splits:
+  track_a: data/splits/track_a/official_cvpr2015.parquet
+  track_b: data/splits/track_b/seed_73.parquet
