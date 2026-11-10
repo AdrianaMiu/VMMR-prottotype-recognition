@@ -13,7 +13,7 @@ because no same-source series are known yet.
 - phash_hash_size: 8
 - phash_hamming_threshold: 2
 - images: 136726 (with a pHash: 136726)
-- runtime of the full build including hashing: 209 s
+- runtime of the full build including hashing: 228 s
 
 ## Counts
 

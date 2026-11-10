@@ -1,0 +1,34 @@
+# Recognition service image (PROTOCOL.md §16). Build from the repository root:
+#   docker build -f docker/Dockerfile.service -t avr-service .
+# Run with the prototype tables and the embedded Qdrant store mounted read-only and the
+# encoder/detector caches mounted so weights are not re-downloaded on every start:
+#   docker run --gpus all -p 8000:8000 \
+#     -v $PWD/data/prototypes:/data/prototypes:ro -v $PWD/data/qdrant:/data/qdrant \
+#     -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+#     -v $HOME/.roboflow:/root/.roboflow -e AVR_RELOAD_TOKEN=... avr-service
+# Raw images are never logged; the embedding extra is disabled unless AVR_ALLOW_EMBEDDINGS=true.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    AVR_PROTOTYPES_DIR=/data/prototypes \
+    AVR_QDRANT_DIR=/data/qdrant
+
+RUN apt-get update && apt-get install -y --no-install-recommends git libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /uvx /bin/
+
+WORKDIR /app
+COPY pyproject.toml uv.lock README.md ./
+COPY src ./src
+COPY configs ./configs
+RUN uv sync --locked --no-dev --extra gpu
+
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s \
+    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/ready').status == 200 else 1)" || exit 1
+
+CMD ["uv", "run", "--no-sync", "uvicorn", "avr.service.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

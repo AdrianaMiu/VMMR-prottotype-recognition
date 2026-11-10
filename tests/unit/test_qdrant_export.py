@@ -4,6 +4,8 @@ Five fake prototypes; the expected neighbours are read off the vectors by hand. 
 mode needs no server, no GPU extra and no network.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -102,3 +104,38 @@ def test_export_replaces_an_existing_collection(tmp_path, five_prototypes):
     assert summary.point_count == 3
     hits = query_top_k(tmp_path / "qdrant", "toy__coll", np.eye(5, dtype=np.float32)[4:5], k=5)
     assert len(hits[0]) == 3
+
+
+def test_target_union_parses_path_and_url_forms():
+    from avr.retrieval.qdrant_store import LocalTarget, ServerTarget, resolve_target
+
+    local = resolve_target({"path": "data/qdrant"})
+    assert isinstance(local, LocalTarget)
+    assert local.path == Path("data/qdrant")
+
+    server = resolve_target({"url": "http://localhost:6333"})
+    assert isinstance(server, ServerTarget)
+    assert server.url == "http://localhost:6333"
+    assert server.api_key is None
+    assert server.timeout_s == 30
+
+    with_key = resolve_target({"url": "http://q:6333", "api_key": "s3cret", "timeout_s": 5})
+    assert with_key.api_key == "s3cret"
+    assert with_key.timeout_s == 5
+
+    assert resolve_target(Path("x")) == LocalTarget(path=Path("x"))
+    assert resolve_target(local) is local
+    with pytest.raises(ValueError):
+        resolve_target({"path": "a", "url": "http://b"})
+    with pytest.raises(ValueError):
+        resolve_target({})
+
+
+def test_local_target_exports_and_queries_like_a_path(tmp_path, five_prototypes):
+    from avr.retrieval.qdrant_store import LocalTarget, list_collections
+
+    target = LocalTarget(path=tmp_path / "qdrant")
+    export_prototypes(target, "toy__coll", five_prototypes)
+    hits = query_top_k(target, "toy__coll", np.eye(5, dtype=np.float32)[2:3], k=1, exact=True)
+    assert [h.class_id for h in hits[0]] == ["c2"]
+    assert list_collections(target) == ["toy__coll"]

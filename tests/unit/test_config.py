@@ -52,3 +52,13 @@ def test_track_b_split_group_records_the_cross_view_condition():
     assert list(cfg.split_track_b.cross_view.views) == [1, 2, 3, 4, 5]
     assert cfg.split_track_b.cross_view.min_support == 5
     assert cfg.split_track_b.cross_view.min_test == 1
+
+
+def test_service_group_points_at_the_qdrant_server_with_exact_search():
+    cfg = load_config()
+
+    # PROTOCOL.md §12: default to exact search while the prototype count is small.
+    assert cfg.service.qdrant.url == "http://localhost:6333"
+    assert cfg.service.qdrant.api_key is None
+    assert cfg.service.qdrant.timeout_s == 30
+    assert cfg.service.qdrant.exact is True

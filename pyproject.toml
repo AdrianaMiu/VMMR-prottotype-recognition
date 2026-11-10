@@ -20,6 +20,10 @@ dependencies = [
     "scikit-learn>=1.9.1",
     "imagehash>=4.3.2",
     "qdrant-client>=1.20.0",
+    "fastapi>=0.115,<1",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34,<1",
+    "pydantic-settings>=2.8,<3",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +36,9 @@ gpu = [
     "timm>=1.0,<2",
     "safetensors>=0.5,<1",
 ]
+demo = [
+    "gradio>=5.49,<6",
+]
 
 [dependency-groups]
 dev = [
@@ -39,6 +46,7 @@ dev = [
     "ruff>=0.11,<1",
     "pre-commit>=4.2,<5",
     "dvc>=3.59,<4",
+    "httpx>=0.28,<1",
 ]
 
 [build-system]
