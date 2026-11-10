@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-from avr.data.splits_io import read_sidecar_sha256
+from avr.io import read_sidecar_sha256
 from avr.pipeline.gate import MAPPING_VERSION
 from avr.retrieval.qdrant_store import (
     ExportSummary,

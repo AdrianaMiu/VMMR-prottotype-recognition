@@ -22,11 +22,11 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
-from avr.data.splits_io import read_sidecar_sha256
+from avr.data.split_identity import TRACK_A_LABEL
 from avr.encoders.store import EmbeddingStore, StoreIdentity
 from avr.evaluation.per_query import build_per_query
+from avr.io import read_sidecar_sha256
 from avr.pipeline.e0 import class_id_of
-from avr.pipeline.gate import TRACK_A_SPLIT_LABEL
 from avr.prototypes.m0 import build_global_mean_prototypes
 
 Track = Literal["track_a", "track_b"]
@@ -141,7 +141,7 @@ def run_query_ranks(inputs: QueryRanksInputs) -> QueryRanksResult:
         rows = _track_a_rows(split, manifest)
         support = rows[rows.split_track_a == "support"]
         query = rows[rows.split_track_a == "query"]
-        split_label, mapping_status = TRACK_A_SPLIT_LABEL, "not_applicable"
+        split_label, mapping_status = TRACK_A_LABEL, "not_applicable"
         not_eligible = 0
     else:
         rows = _track_b_rows(split, manifest)

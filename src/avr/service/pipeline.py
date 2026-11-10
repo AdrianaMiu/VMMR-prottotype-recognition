@@ -29,6 +29,7 @@ from typing import Protocol
 import numpy as np
 from PIL import Image
 
+from avr.preprocessing.crop import P1_EXPAND_FRACTION
 from avr.preprocessing.variants import Variant, prepare
 from avr.segmentation.base import Instance, Segmenter
 from avr.service.schemas import Decision, Prediction, StageLatency, Vehicle
@@ -83,7 +84,7 @@ class RecognitionPipeline:
         variant: Variant,
         accept_threshold: float = 0.6,
         min_detection_score: float = 0.0,
-        expand: float = 0.05,
+        expand: float = P1_EXPAND_FRACTION,
     ) -> None:
         self.segmenter = segmenter
         self.encoder = encoder

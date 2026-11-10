@@ -71,6 +71,6 @@ def test_per_query_aggregates_equal_committed_gate_numbers(track, variant):
 
 
 def gate_split_label() -> str:
-    from avr.pipeline.gate import TRACK_A_SPLIT_LABEL
+    from avr.data.split_identity import TRACK_A_LABEL
 
-    return TRACK_A_SPLIT_LABEL
+    return TRACK_A_LABEL
